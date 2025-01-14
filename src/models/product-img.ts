@@ -11,7 +11,7 @@ import Product from "./product";
 type ProductImgAttributes = {
   id: string;
   product_id: string;
-  url: string;
+  file_name: string;
 };
 
 type ProductImgCreationAttributes = Optional<ProductImgAttributes, "id">;
@@ -43,7 +43,7 @@ export default class ProductImg extends Model<
     type: DataType.STRING,
     allowNull: false,
   })
-  declare url: string;
+  declare file_name: string;
 }
 
 export { ProductImgAttributes };

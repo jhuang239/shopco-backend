@@ -1,6 +1,9 @@
 import express, { Request, Response } from "express";
 import { addProduct } from "../controllers/productController";
 import { getUsers } from "../controllers/userController";
+import { uploadFileToFirebase } from "../middlewares/firebase";
+import { createProductImg } from "../controllers/product-imgController";
+import { upload } from "../middlewares/multer";
 const router = express.Router();
 
 /**
@@ -95,5 +98,73 @@ router.post("/addProduct", addProduct);
  *         description: Server Error
  */
 router.get("/allUsers", getUsers);
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Product-Image:
+ *       type: object
+ *       required:
+ *         - product_id
+ *         - file
+ *       properties:
+ *         product_id:
+ *           type: string
+ *           description: The id of the product
+ *         file:
+ *           type: string
+ *           format: binary
+ *           description: The image file of the product
+ *
+ *     Product-Image-Response:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: The response message
+ *         imageUrl:
+ *           type: string
+ *           description: The image url of the product
+ */
+
+/**
+ * @swagger
+ * /admin/addProductImage:
+ *   post:
+ *     summary: Add an image to a product
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     consumes:
+ *       - multipart/form-data
+ *     produces:
+ *       - application/json
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/Product-Image'
+ *     responses:
+ *       200:
+ *         description: Image added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product-Image-Response'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Server Error
+ */
+router.post(
+  "/addProductImage",
+  upload.single("file"),
+  uploadFileToFirebase,
+  createProductImg
+);
 
 export default router;

@@ -5,8 +5,9 @@ import ProductImg, { ProductImgAttributes } from "../models/product-img";
 
 const createProductImg = async (req: Request, res: Response) => {
   try {
-    const { product_id, url } = req.body as ProductImgAttributes;
-    const productImg = await ProductImg.create({ product_id, url });
+    console.log(req.body);
+    const { product_id, file_name } = req.body as ProductImgAttributes;
+    const productImg = await ProductImg.create({ product_id, file_name });
     res.status(201).json(productImg);
   } catch (error) {
     if (error instanceof Error) {

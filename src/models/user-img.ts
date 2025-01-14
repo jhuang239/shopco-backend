@@ -11,7 +11,7 @@ import {
 type UserImgAttributes = {
   id: string;
   user_id: string;
-  url: string;
+  file_name: string;
 };
 
 type UserImgCreationAttributes = Optional<UserImgAttributes, "id">;
