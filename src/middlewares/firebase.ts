@@ -6,10 +6,11 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-
+3;
 type firebaseFile = {
   originalname: string;
   buffer: Buffer;
+  mimetype: string;
 };
 
 const uploadFileToFirebase = async (
@@ -25,7 +26,12 @@ const uploadFileToFirebase = async (
     const fileName = `${Date.now()}_${file.originalname}`;
     const storageRef = ref(storage, fileName);
 
-    const snapshot = await uploadBytes(storageRef, file.buffer);
+    const metadata = {
+      contentType: file.mimetype,
+      cachesControl: "public, max-age=31536000",
+    };
+
+    const snapshot = await uploadBytes(storageRef, file.buffer, metadata);
 
     req.body.file_name = fileName;
     next();
@@ -50,19 +56,14 @@ const deleteFileFromFirebase = async (
   }
 };
 
-const getFileByFileName = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const getFileByFileName = async (filename: string) => {
   try {
-    const fileName = req.params.fileName;
-    const storageRef = ref(storage, fileName);
-    const downloadURL = await getDownloadURL(storageRef);
-    req.body.image = { url: downloadURL, fileName: fileName };
-    next();
+    const storageRef = ref(storage, filename);
+    const previewUrl = await getDownloadURL(storageRef);
+    return previewUrl;
   } catch (error) {
-    next(error);
+    console.error(error);
+    return "Picture not found";
   }
 };
 

@@ -1,5 +1,7 @@
 import Product from "../models/product";
 import { Request, Response } from "express";
+import ProductImg from "../models/product-img";
+import { getFileByFileName } from "../middlewares/firebase";
 
 type IProduct = {
   id: string;
@@ -48,14 +50,23 @@ const getProducts = async (req: Request, res: Response) => {
 
 const getProductById = async (req: Request, res: Response) => {
   try {
-    console.log("req.params", req.params);
     const { id } = req.params;
     const product = await Product.findByPk(id);
     if (!product) {
       res.status(404).json({ error: "Product not found" });
       return;
     }
-    res.status(200).json(product);
+    const productImgs = await ProductImg.findAll({ where: { product_id: id } });
+    const productImgUrls = [];
+    for (let item of productImgs) {
+      const url = await getFileByFileName(item.file_name);
+      productImgUrls.push({
+        id: item.id,
+        file_name: item.file_name,
+        url,
+      });
+    }
+    res.status(200).json({ product, urls: productImgUrls });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
