@@ -162,7 +162,7 @@ router.get("/allUsers", getUsers);
  */
 router.post(
   "/addProductImage",
-  upload.single("file"),
+  upload.single("image"),
   uploadFileToFirebase,
   createProductImg
 );
