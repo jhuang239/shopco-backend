@@ -1,47 +1,17 @@
 import express, { Request, Response } from "express";
-import { addProduct } from "../controllers/productController";
+import { addProduct, deleteProduct } from "../controllers/productController";
 import { getUsers } from "../controllers/userController";
-import { uploadFileToFirebase } from "../middlewares/firebase";
+import { addBrand, deleteBrand } from "../controllers/brandController";
+import { addCategory, deleteCategory } from "../controllers/categoryController";
+import { createSale } from "../controllers/saleController";
+import {
+  uploadFileToFirebase,
+  deleteFileFromFirebase,
+} from "../middlewares/firebase";
 import { createProductImg } from "../controllers/product-imgController";
 import { upload } from "../middlewares/multer";
+import { createCode, deleteCode } from "../controllers/codeController";
 const router = express.Router();
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Product:
- *       type: object
- *       required:
- *         - name
- *         - description
- *         - price
- *         - stock
- *         - category_id
- *         - brand_id
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the product
- *         name:
- *           type: string
- *           description: The product name
- *         description:
- *           type: string
- *           description: The product description
- *         price:
- *           type: number
- *           description: The product price
- *         stock:
- *           type: number
- *           description: The product number in stock
- *         category_id:
- *           type: string
- *           description: The category id of the product
- *         brand_id:
- *           type: string
- *           description: The brand id of the product
- */
 
 /**
  * @swagger
@@ -51,10 +21,14 @@ const router = express.Router();
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
+ *     consumes:
+ *       - multipart/form-data
+ *     produces:
+ *       - application/json
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             $ref: '#/components/schemas/Product'
  *     responses:
@@ -71,7 +45,13 @@ const router = express.Router();
  *       500:
  *         description: Server Error
  */
-router.post("/addProduct", addProduct);
+router.post(
+  "/addProduct",
+  upload.array("images", 5),
+  addProduct,
+  uploadFileToFirebase,
+  createProductImg
+);
 
 /**
  * @swagger
@@ -101,70 +81,214 @@ router.get("/allUsers", getUsers);
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Product-Image:
- *       type: object
- *       required:
- *         - product_id
- *         - file
- *       properties:
- *         product_id:
- *           type: string
- *           description: The id of the product
- *         file:
- *           type: string
- *           format: binary
- *           description: The image file of the product
- *
- *     Product-Image-Response:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           description: The response message
- *         imageUrl:
- *           type: string
- *           description: The image url of the product
- */
-
-/**
- * @swagger
- * /admin/addProductImage:
- *   post:
- *     summary: Add an image to a product
+ * /admin/deleteProduct/{id}:
+ *   delete:
+ *     summary: Delete a product by ID
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     consumes:
- *       - multipart/form-data
- *     produces:
- *       - application/json
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The product ID
+ *     responses:
+ *       '200':
+ *         description: Product deleted successfully
+ *       '401':
+ *         description: Unauthorized
+ */
+router.delete("/deleteProduct/:id", deleteFileFromFirebase, deleteProduct);
+
+/**
+ * @swagger
+ * /admin/addBrand:
+ *   post:
+ *     summary: Create a new brand
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Product-Image'
+ *             $ref: '#/components/schemas/Brand'
  *     responses:
- *       200:
- *         description: Image added successfully
+ *       '201':
+ *         description: Brand created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Product-Image-Response'
- *       401:
+ *               $ref: '#/components/schemas/Brand'
+ *       '401':
  *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       500:
+ *       '500':
  *         description: Server Error
  */
-router.post(
-  "/addProductImage",
-  upload.single("image"),
-  uploadFileToFirebase,
-  createProductImg
-);
+router.post("/addBrand", addBrand);
+
+/**
+ * @swagger
+ * /admin/deleteBrand/{id}:
+ *   delete:
+ *     summary: Delete a brand by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The brand ID
+ *     responses:
+ *       200:
+ *         description: Brand deleted successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.delete("/deleteBrand/:id", deleteBrand);
+
+/**
+ * @swagger
+ * /admin/addCategory:
+ *   post:
+ *     summary: Create a new category
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Category'
+ *     responses:
+ *       '201':
+ *         description: Category created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Category'
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Server Error
+ */
+router.post("/addCategory", addCategory);
+
+/**
+ * @swagger
+ * /admin/deleteCategory/{id}:
+ *   delete:
+ *     summary: Delete a category by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the category to delete
+ *     responses:
+ *       '200':
+ *         description: Category deleted successfully
+ *       '404':
+ *         description: Category not found
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Server Error
+ */
+router.delete("/deleteCategory/:id", deleteCategory);
+
+/**
+ * @swagger
+ * /admin/addCode:
+ *   post:
+ *     summary: Create a new code
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Code'
+ *     responses:
+ *       '201':
+ *         description: Code created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Code'
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Server Error
+ */
+router.post("/addCode", createCode);
+
+/**
+ * @swagger
+ * /admin/deleteCode/{id}:
+ *   delete:
+ *     summary: Delete a code by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the code to delete
+ *     responses:
+ *       '200':
+ *         description: Code deleted successfully
+ *       '404':
+ *         description: Code not found
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Server Error
+ */
+router.delete("/deleteCode/:id", deleteCode);
+
+/**
+ * @swagger
+ * /admin/createSale:
+ *   post:
+ *     summary: Create a new sale
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Sale'
+ *     responses:
+ *       '201':
+ *         description: Sale created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Sale'
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Server Error
+ */
+router.post("/createSale", createSale);
 
 export default router;

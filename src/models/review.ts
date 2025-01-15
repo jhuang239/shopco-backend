@@ -5,11 +5,13 @@ import {
   Model,
   DataType,
   ForeignKey,
+  Validate,
 } from "sequelize-typescript";
 import Product from "./product";
+import User from "./user";
 
 type ReviewAttributes = {
-  id: number;
+  id: string;
   comment: string;
   rating: number;
   user_id: string;
@@ -30,11 +32,10 @@ export default class Review extends Model<
 > {
   @Column({
     primaryKey: true,
-    type: DataType.INTEGER,
-    autoIncrement: true,
-    defaultValue: DataType.INTEGER,
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
   })
-  declare id: number;
+  declare id: string;
 
   @Column({
     type: DataType.STRING,
@@ -48,15 +49,32 @@ export default class Review extends Model<
   })
   declare rating: number;
 
+  @ForeignKey(() => User)
+  @Validate({
+    async userExists(value: string) {
+      const user = await User.findByPk(value);
+      if (!user) {
+        throw new Error("User does not exist");
+      }
+    },
+  })
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUID,
     allowNull: false,
   })
   declare user_id: string;
 
   @ForeignKey(() => Product)
+  @Validate({
+    async productExists(value: string) {
+      const product = await Product.findByPk(value);
+      if (!product) {
+        throw new Error("Product does not exist");
+      }
+    },
+  })
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUID,
     allowNull: false,
   })
   declare product_id: string;

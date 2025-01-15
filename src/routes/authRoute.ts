@@ -4,36 +4,6 @@ const router = express.Router();
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       required:
- *         - username
- *         - email
- *         - password
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the product
- *         username:
- *           type: string
- *           description: The user name
- *         email:
- *           type: string
- *           description: The user email
- *         password:
- *           type: string
- *           description: The user password
- *       example:
- *         id: f47ac10b-58cc-4372-a567-0e02b2c3d479
- *         username: kimwong1118
- *         email: kimwong@example.com
- *         password: password
- */
-
-/**
- * @swagger
  * tags:
  *  - name: Auth
  *    description: The authentication managing API

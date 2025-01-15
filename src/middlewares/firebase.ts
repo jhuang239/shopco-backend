@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { storage } from "../utils/firebase-config";
+import ProductImg from "../models/product-img";
 import {
   ref,
   uploadBytes,
@@ -18,22 +19,31 @@ const uploadFileToFirebase = async (
   res: Response,
   next: NextFunction
 ) => {
+  if (!req.files) {
+    throw new Error("no file uploaded");
+  }
   try {
-    if (!req.file) {
-      throw new Error("no file uploaded");
-    }
-    const file = req.file as firebaseFile;
-    const fileName = `${Date.now()}_${file.originalname}`;
-    const storageRef = ref(storage, fileName);
-
-    const metadata = {
-      contentType: file.mimetype,
-      cachesControl: "public, max-age=31536000",
-    };
-
-    const snapshot = await uploadBytes(storageRef, file.buffer, metadata);
-
-    req.body.file_name = fileName;
+    const uploadedFiles: string[] = [];
+    const files = (req.files as Express.Multer.File[]).map(async (file) => {
+      try {
+        const fileName = `${Date.now()}_${file.originalname}`;
+        const storageRef = ref(storage, fileName);
+        const metadata = {
+          contentType: file.mimetype,
+          cacheControl: "public, max-age=31536000",
+          customMetadata: {
+            uploadedBy: "admin",
+            uploadedAt: new Date().toISOString(),
+          },
+        };
+        const snapshot = await uploadBytes(storageRef, file.buffer, metadata);
+        uploadedFiles.push(fileName);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+    await Promise.all(files);
+    req.body.uploadedFiles = uploadedFiles;
     next();
   } catch (error) {
     next(error);
@@ -46,10 +56,18 @@ const deleteFileFromFirebase = async (
   next: NextFunction
 ) => {
   try {
-    const fileName = req.params.fileName;
-    const storageRef = ref(storage, fileName);
-    const result = await deleteObject(storageRef);
-    req.body.result = result;
+    const product_id = req.params.id;
+    const productImgs = await ProductImg.findAll({ where: { product_id } });
+    const files = productImgs.map(async (productImg) => {
+      try {
+        const filename = productImg.dataValues.file_name;
+        const storageRef = ref(storage, filename);
+        await deleteObject(storageRef);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+    await Promise.all(files);
     next();
   } catch (error) {
     next(error);

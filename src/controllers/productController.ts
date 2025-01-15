@@ -1,22 +1,19 @@
 import Product from "../models/product";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import ProductImg from "../models/product-img";
-import { getFileByFileName } from "../middlewares/firebase";
+import Category from "../models/category";
+import Brand from "../models/brand";
+import { ProductAttributes } from "../models/product";
+import {
+  getFileByFileName,
+  deleteFileFromFirebase,
+} from "../middlewares/firebase";
 
-type IProduct = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  category_id: number;
-  brand_id: number;
-};
-
-const addProduct = async (req: Request, res: Response) => {
+const addProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, description, price, stock, category_id, brand_id } =
-      req.body as IProduct;
+      req.body as ProductAttributes;
+    console.log(req.body);
     const product = await Product.create({
       name,
       description,
@@ -25,7 +22,9 @@ const addProduct = async (req: Request, res: Response) => {
       category_id,
       brand_id,
     });
-    res.status(201).json(product);
+    console.log("product", product);
+    req.body.result_product_id = product.dataValues.id;
+    next();
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -37,7 +36,28 @@ const addProduct = async (req: Request, res: Response) => {
 
 const getProducts = async (req: Request, res: Response) => {
   try {
-    const products = await Product.findAll();
+    const products = await Product.findAll({
+      include: [
+        {
+          model: ProductImg,
+          attributes: ["file_name"],
+        },
+        {
+          model: Category,
+          attributes: ["name"],
+        },
+        {
+          model: Brand,
+          attributes: ["name"],
+        },
+      ],
+      order: [
+        ["id", "DESC"],
+        [ProductImg, "id", "ASC"],
+      ],
+      group: ["Product.id", "Category.id", "Brand.id", "ProductImgs.id"],
+    });
+    console.log(products);
     res.status(200).json(products);
   } catch (error) {
     if (error instanceof Error) {
@@ -112,10 +132,32 @@ const getProductsByBrand = async (req: Request, res: Response) => {
   }
 };
 
+const deleteProduct = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByPk(id);
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    const result = await Product.destroy({ where: { id } });
+    const result_img = await ProductImg.destroy({ where: { product_id: id } });
+
+    res.status(200).json({ result, result_img });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
+  }
+};
+
 export {
   addProduct,
   getProducts,
   getProductById,
   getProductsByCategory,
   getProductsByBrand,
+  deleteProduct,
 };

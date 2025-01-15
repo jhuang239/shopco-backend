@@ -1,5 +1,15 @@
 import { Optional } from "sequelize";
-import { Table, Column, Model, DataType } from "sequelize-typescript";
+import ProductImg from "./product-img";
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  ForeignKey,
+  Validate,
+} from "sequelize-typescript";
+import Category from "./category";
+import Brand from "./brand";
 
 type ProductAttributes = {
   id: string;
@@ -7,8 +17,8 @@ type ProductAttributes = {
   description: string;
   price: number;
   stock: number;
-  category_id: number;
-  brand_id: number;
+  category_id: string;
+  brand_id: string;
 };
 
 type ProductCreationAttributes = Optional<ProductAttributes, "id">;
@@ -53,15 +63,35 @@ export default class Product extends Model<
   })
   declare stock: number;
 
+  @ForeignKey(() => Category)
+  @Validate({
+    async categoryExists(value: string) {
+      const category = await Category.findByPk(value);
+      if (!category) {
+        throw new Error("Category does not exist");
+      }
+    },
+  })
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.UUID,
     allowNull: false,
   })
-  declare category_id: number;
+  declare category_id: string;
 
+  @Validate({
+    async brandExists(value: string) {
+      const brand = await Brand.findByPk(value);
+      if (!brand) {
+        throw new Error("Brand does not exist");
+      }
+    },
+  })
+  @ForeignKey(() => Brand)
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.UUID,
     allowNull: false,
   })
-  declare brand_id: number;
+  declare brand_id: string;
 }
+
+export { ProductAttributes };

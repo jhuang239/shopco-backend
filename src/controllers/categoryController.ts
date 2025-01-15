@@ -17,6 +17,25 @@ const addCategory = async (req: Request, res: Response) => {
   }
 };
 
+const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const category = await Category.findByPk(id);
+    if (!category) {
+      res.status(404).json({ error: "Category not found" });
+      return;
+    }
+    await category.destroy();
+    res.status(200).json({ message: "Category deleted successfully" });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
+  }
+};
+
 const getCategories = async (req: Request, res: Response) => {
   try {
     const categories = await Category.findAll();
@@ -30,4 +49,4 @@ const getCategories = async (req: Request, res: Response) => {
   }
 };
 
-export { addCategory, getCategories };
+export { addCategory, getCategories, deleteCategory };

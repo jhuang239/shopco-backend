@@ -6,10 +6,11 @@ import {
   Model,
   DataType,
   ForeignKey,
+  Validate,
 } from "sequelize-typescript";
 
 type SaleAttributes = {
-  id: number;
+  id: string;
   start_date: Date;
   end_date: Date;
   discount: number;
@@ -29,11 +30,10 @@ export default class Sale extends Model<
 > {
   @Column({
     primaryKey: true,
-    type: DataType.INTEGER,
-    autoIncrement: true,
-    defaultValue: DataType.INTEGER,
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
   })
-  declare id: number;
+  declare id: string;
 
   @Column({
     type: DataType.DATE,
@@ -54,8 +54,16 @@ export default class Sale extends Model<
   declare discount: number;
 
   @ForeignKey(() => Product)
+  @Validate({
+    async productExists(value: string) {
+      const product = await Product.findByPk(value);
+      if (!product) {
+        throw new Error("Product does not exist");
+      }
+    },
+  })
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUID,
     allowNull: false,
   })
   declare product_id: string;

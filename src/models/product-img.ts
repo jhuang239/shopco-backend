@@ -5,6 +5,7 @@ import {
   Model,
   DataType,
   ForeignKey,
+  Validate,
 } from "sequelize-typescript";
 import Product from "./product";
 
@@ -33,8 +34,16 @@ export default class ProductImg extends Model<
   declare id: string;
 
   @ForeignKey(() => Product)
+  @Validate({
+    async productExists(value: string) {
+      const product = await Product.findByPk(value);
+      if (!product) {
+        throw new Error("Product does not exist");
+      }
+    },
+  })
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUID,
     allowNull: false,
   })
   declare product_id: string;

@@ -13,6 +13,7 @@ import config from "./swagger.config";
 
 //* middleware
 import { isAuthenticated, isAdmin } from "./middlewares/authentication";
+import relationshipInit from "./utils/relationship-init";
 
 const app: Express = express();
 const PORT: number = 3000;
@@ -28,16 +29,13 @@ app.use("/user", userRoute);
 app.use("/product", productRoute);
 app.use("/auth", authRoute);
 app.use("/cart", cartRoute);
-app.use("/admin", isAdmin, adminRoute);
+// app.use("/admin", isAdmin, adminRoute);
+app.use("/admin", adminRoute);
 
-sequelize
-  .sync()
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+sequelize.sync().then(() => {
+  console.log("Database connected");
+  relationshipInit(sequelize);
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

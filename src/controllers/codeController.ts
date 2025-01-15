@@ -21,6 +21,25 @@ const createCode = async (req: Request, res: Response) => {
   }
 };
 
+const deleteCode = async (req: Request, res: Response) => {
+  const { code } = req.params;
+  try {
+    const codeExists = await Code.findOne({ where: { code } });
+    if (codeExists) {
+      await codeExists.destroy();
+      res.status(200).json({ message: "Code deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Code not found" });
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+};
+
 const getCode = async (req: Request, res: Response) => {
   const { code } = req.params;
   try {
@@ -39,4 +58,4 @@ const getCode = async (req: Request, res: Response) => {
   }
 };
 
-export { createCode, getCode };
+export { createCode, getCode, deleteCode };

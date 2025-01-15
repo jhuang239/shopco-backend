@@ -6,6 +6,7 @@ import {
   Model,
   DataType,
   ForeignKey,
+  Validate,
 } from "sequelize-typescript";
 
 type UserImgAttributes = {
@@ -33,8 +34,16 @@ export default class UserImg extends Model<
   declare id: string;
 
   @ForeignKey(() => User)
+  @Validate({
+    async userExists(value: string) {
+      const user = await User.findByPk(value);
+      if (!user) {
+        throw new Error("User does not exist");
+      }
+    },
+  })
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUID,
     allowNull: false,
   })
   declare user_id: string;
