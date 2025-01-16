@@ -8,6 +8,7 @@ import {
   getFileByFileName,
   deleteFileFromFirebase,
 } from "../middlewares/firebase";
+import { literal } from "sequelize";
 
 const addProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -34,13 +35,16 @@ const addProduct = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const getProducts = async (req: Request, res: Response) => {
+const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const products = await Product.findAll({
+    let products = await Product.findAll({
       include: [
         {
           model: ProductImg,
-          attributes: ["file_name"],
+          separate: true,
+          limit: 1,
+          attributes: ["id", "file_name"],
+          order: [["createdAt", "ASC"]],
         },
         {
           model: Category,
@@ -51,14 +55,18 @@ const getProducts = async (req: Request, res: Response) => {
           attributes: ["name"],
         },
       ],
-      order: [
-        ["id", "DESC"],
-        [ProductImg, "id", "ASC"],
-      ],
-      group: ["Product.id", "Category.id", "Brand.id", "ProductImgs.id"],
     });
-    console.log(products);
-    res.status(200).json(products);
+
+    await Promise.all(
+      products.map(async (product: any) => {
+        const file_name =
+          product.dataValues.ProductImgs[0].dataValues.file_name;
+        const url = await getFileByFileName(file_name);
+        product.dataValues.ProductImgs[0].dataValues.url = url;
+        return product; // Return the modified product
+      })
+    );
+    res.status(200).json(products); // Send the original products array which was modified
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

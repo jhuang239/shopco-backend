@@ -77,21 +77,28 @@ const swaggerOptions = {
           properties: {
             name: {
               type: "string",
+              description: "The name of the product",
             },
             description: {
               type: "string",
+              format: "textarea",
+              description: "The description of the product",
             },
             price: {
               type: "number",
+              description: "The price of the product",
             },
             stock: {
               type: "number",
+              description: "The stock of the product",
             },
             category_id: {
               type: "string",
+              description: "The id of the category",
             },
             brand_id: {
               type: "string",
+              description: "The id of the brand",
             },
             images: {
               type: "array",
@@ -99,6 +106,7 @@ const swaggerOptions = {
                 type: "string",
                 format: "binary",
               },
+              description: "The images of the product",
             },
           },
           example: {

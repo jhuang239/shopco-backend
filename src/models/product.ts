@@ -46,7 +46,7 @@ export default class Product extends Model<
   declare name: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   declare description: string;
