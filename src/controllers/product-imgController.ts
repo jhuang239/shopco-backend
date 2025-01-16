@@ -6,9 +6,10 @@ import { deleteFileFromFirebase } from "../middlewares/firebase";
 
 const createProductImg = async (req: Request, res: Response) => {
   try {
-    const product_id = req.body.result_product_id;
+    const product_id = req.body.result_product_id || req.params.id;
     const file_names = req.body.uploadedFiles;
     console.log("product_id", product_id);
+    console.log("file_names", file_names);
     const createdRecords: string[] = [];
     for (const file_name of file_names) {
       const productImg = await ProductImg.create({ product_id, file_name });

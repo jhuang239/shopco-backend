@@ -1,12 +1,18 @@
 import express, { Request, Response } from "express";
-import { addProduct, deleteProduct } from "../controllers/productController";
+import {
+  addProduct,
+  deleteProduct,
+  updateProduct,
+  getProductById,
+} from "../controllers/productController";
 import { getUsers } from "../controllers/userController";
 import { addBrand, deleteBrand } from "../controllers/brandController";
 import { addCategory, deleteCategory } from "../controllers/categoryController";
 import { createSale } from "../controllers/saleController";
 import {
-  uploadFileToFirebase,
+  uploadFilesToFirebase,
   deleteFileFromFirebase,
+  deleteFileFromFirebaseByImgIds,
 } from "../middlewares/firebase";
 import { createProductImg } from "../controllers/product-imgController";
 import { upload } from "../middlewares/multer";
@@ -49,7 +55,49 @@ router.post(
   "/addProduct",
   upload.array("images", 5),
   addProduct,
-  uploadFileToFirebase,
+  uploadFilesToFirebase,
+  createProductImg
+);
+
+/**
+ * @swagger
+ * /admin/updateProduct/{id}:
+ *   put:
+ *     summary: Update a product by ID
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     consumes:
+ *       - multipart/form-data
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The product ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateProduct'
+ *     responses:
+ *       200:
+ *         description: Product updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server Error
+ */
+router.put(
+  "/updateProduct/:id",
+  upload.array("images", 5),
+  updateProduct,
+  deleteFileFromFirebaseByImgIds,
+  uploadFilesToFirebase,
   createProductImg
 );
 

@@ -36,14 +36,14 @@ export default class UserImg extends Model<
   @ForeignKey(() => User)
   @Validate({
     async userExists(value: string) {
-      const user = await User.findByPk(value);
+      const user = await User.findOne({ where: { username: value } });
       if (!user) {
         throw new Error("User does not exist");
       }
     },
   })
   @Column({
-    type: DataType.UUID,
+    type: DataType.STRING,
     allowNull: false,
   })
   declare user_id: string;
@@ -52,7 +52,7 @@ export default class UserImg extends Model<
     type: DataType.STRING,
     allowNull: false,
   })
-  declare url: string;
+  declare file_name: string;
 }
 
 export { UserImgAttributes };

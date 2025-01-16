@@ -25,20 +25,20 @@ const relationshipInit = async (sequelize: Sequelize) => {
   Product.hasMany(ProductImg, { foreignKey: "product_id" });
   ProductImg.belongsTo(Product, { foreignKey: "product_id" });
 
+  Product.hasMany(Sale, { foreignKey: "product_id" });
+  Sale.belongsTo(Product, { foreignKey: "product_id" });
+
+  Product.hasMany(Review, { foreignKey: "product_id" });
+  Review.belongsTo(Product, { foreignKey: "product_id" });
+
+  User.hasMany(Review, { foreignKey: "user_id" });
+  Review.belongsTo(User, { foreignKey: "user_id" });
+
   // User.hasMany(Cart, { foreignKey: "user_id" });
   // Cart.belongsTo(User, { foreignKey: "user_id" });
 
   // User.hasOne(UserImg, { foreignKey: "user_id" });
   // UserImg.belongsTo(User, { foreignKey: "user_id" });
-
-  // Product.hasMany(Review, { foreignKey: "product_id" });
-  // Review.belongsTo(Product, { foreignKey: "product_id" });
-
-  // User.hasMany(Review, { foreignKey: "user_id" });
-  // Review.belongsTo(User, { foreignKey: "user_id" });
-
-  // Product.hasOne(Sale, { foreignKey: "product_id" });
-  // Sale.belongsTo(Product, { foreignKey: "product_id" });
 
   await sequelize.sync();
 };

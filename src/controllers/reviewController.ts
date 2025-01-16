@@ -10,7 +10,6 @@ const createReview = async (req: Request, res: Response) => {
       rating,
       user_id,
       product_id,
-      comment_date: new Date(),
     });
     res.status(201).json(review);
   } catch (error) {
@@ -61,4 +60,18 @@ const deleteReview = async (req: Request, res: Response) => {
   }
 };
 
-export { createReview, updateReview, deleteReview };
+const getReviewByProductId = async (req: Request, res: Response) => {
+  try {
+    const product_id = req.params.id;
+    const reviews = await Review.findAll({ where: { product_id } });
+    res.status(200).json(reviews);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+export { createReview, updateReview, deleteReview, getReviewByProductId };

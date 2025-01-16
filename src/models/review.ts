@@ -16,7 +16,6 @@ type ReviewAttributes = {
   rating: number;
   user_id: string;
   product_id: string;
-  comment_date: Date;
 };
 
 type ReviewCreationAttributes = Optional<ReviewAttributes, "id">;
