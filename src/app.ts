@@ -1,3 +1,4 @@
+require("dotenv").config();
 import express, { Express } from "express";
 import sequelize from "./utils/database";
 //* routes
@@ -17,7 +18,7 @@ import { isAuthenticated, isAdmin } from "./middlewares/authentication";
 import relationshipInit from "./utils/relationship-init";
 
 const app: Express = express();
-const PORT: number = 3000;
+const PORT = process.env.PORT || 3000;
 
 const swaggerSpec = swaggerJSDoc(config);
 

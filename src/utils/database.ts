@@ -1,4 +1,3 @@
-require("dotenv").config();
 import { Sequelize } from "sequelize-typescript";
 import shopCoModels from "../models/models";
 
