@@ -17,8 +17,6 @@ services:
       - traefik.http.routers.shopco-backend.tls=true
       - traefik.http.routers.shopco-backend.entrypoints=websecure
       - traefik.http.routers.shopco-backend.tls.certresolver=cloudflare
-    depends_on:
-      - postgres
 
 networks:
   shopco-net:
