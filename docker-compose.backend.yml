@@ -1,0 +1,27 @@
+services:
+  shopco-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shopco-backend
+    restart: unless-stopped
+    networks:
+      - shopco-net
+      - traefik-net
+    environment:
+      - .env # Load environment variables from .env file
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.shopco-backend.rule=Host(`shopco-backend.${DOMAIN}`)
+      - traefik.http.services.shopco-backend.loadbalancer.server.port=${PORT}
+      - traefik.http.routers.shopco-backend.tls=true
+      - traefik.http.routers.shopco-backend.entrypoints=websecure
+      - traefik.http.routers.shopco-backend.tls.certresolver=cloudflare
+    depends_on:
+      - postgres
+
+networks:
+  shopco-net:
+    external: true
+  traefik-net:
+    external: true
