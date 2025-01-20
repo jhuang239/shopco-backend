@@ -1,5 +1,5 @@
 services:
-  shopco-backend:
+  shopcobackend:
     build:
       context: .
       dockerfile: Dockerfile
