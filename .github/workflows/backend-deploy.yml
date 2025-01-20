@@ -87,7 +87,10 @@ jobs:
         id: deploy-backend
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} "cd ~/shopco && \
+          if docker compose ps --services --filter 'status=running' | grep -q 'shopco-backend'; then \
           docker compose stop shopco-backend && \
+          docker compose rm -f shopco-backend; \
+          fi && \
           docker compose up -d shopco-backend"
 
       - name: Clean up SSH keys
