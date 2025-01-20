@@ -88,7 +88,6 @@ jobs:
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} "cd ~/shopco && \
           docker compose down && \
-          docker compose build --no-cache && \
           docker compose up -d"
 
       - name: Clean up SSH keys
