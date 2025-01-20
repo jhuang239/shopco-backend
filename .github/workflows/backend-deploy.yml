@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Deploy Infrastructure Actions
+name: Backend Deploy
 
 # Controls when the workflow will run
 on:
@@ -88,8 +88,7 @@ jobs:
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} "cd ~/shopco && \
           docker compose down && \
-          docker rmi $(docker images 'shopco-backend' -a -q) || true && \
-          docker system prune -f && \
+          docker rmi shopco-backend:latest || true && \
           docker compose build --no-cache && \
           docker compose up -d"
 
