@@ -4,7 +4,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /products:
+ * /product/all:
  *   get:
  *     summary: Retrieve a list of products
  *     tags: [Products]
@@ -20,7 +20,7 @@ const router = express.Router();
  *       500:
  *         description: An error occurred
  */
-router.get("/", getProducts);
+router.get("/all", getProducts);
 
 /**
  * @swagger

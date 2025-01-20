@@ -66,7 +66,7 @@ const updateProduct = async (
   }
 };
 
-const getProducts = async (req: Request, res: Response, next: NextFunction) => {
+const getProducts = async (req: Request, res: Response) => {
   try {
     let products = await Product.findAll({
       include: [

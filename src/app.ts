@@ -1,6 +1,7 @@
 require("dotenv").config();
 import express, { Express } from "express";
 import sequelize from "./utils/database";
+import cors from "cors";
 //* routes
 import userRoute from "./routes/userRoute";
 import productRoute from "./routes/productRoute";
@@ -23,6 +24,7 @@ const PORT = process.env.PORT || 3000;
 const swaggerSpec = swaggerJSDoc(config);
 
 // Add these middleware before your routes
+app.use(cors());
 app.use(express.json()); // <-- This is required to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // <-- This is for parsing URL-encoded bodies
 
