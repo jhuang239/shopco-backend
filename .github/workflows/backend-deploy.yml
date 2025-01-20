@@ -64,10 +64,10 @@ jobs:
         id: setup-directories
         run: |
           # Copy repository files
-          scp -r ./* ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/shopcobackend/
+          scp -r ./* ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/shopco-backend/
 
           # Copy .env file
-          scp -r ./.env ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/shopcobackend/
+          scp -r ./.env ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/shopco-backend/
 
       - name: Check and create Docker networks
         id: create-docker-networks
@@ -86,12 +86,12 @@ jobs:
       - name: Deploy Backend
         id: deploy-backend
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} "cd ~/shopco && \
-          if docker compose ps --services --filter 'status=running' | grep -q 'shopcobackend'; then \
-          docker compose stop shopcobackend && \
-          docker compose rm -f shopcobackend; \
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} "cd ~/shopco-backend && \
+          if docker compose ps --services --filter 'status=running' | grep -q 'shopco-backend'; then \
+          docker compose stop shopco-backend && \
+          docker compose rm -f shopco-backend; \
           fi && \
-          docker compose up -d shopcobackend"
+          docker compose up -d shopco-backend"
 
       - name: Clean up SSH keys
         if: always()
