@@ -64,10 +64,10 @@ jobs:
         id: setup-directories
         run: |
           # Copy repository files
-          scp -r ./* ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/shopco/
+          scp -r ./* ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/shopco-backend/
 
           # Copy .env file
-          scp -r ./.env ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/shopco/
+          scp -r ./.env ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/shopco-backend/
 
       - name: Check and create Docker networks
         id: create-docker-networks
