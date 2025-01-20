@@ -1,6 +1,6 @@
 # Build stage
 FROM node:18-alpine AS builder
-WORKDIR /app
+WORKDIR .
 COPY package*.json ./
 RUN npm install
 COPY . .
@@ -8,9 +8,9 @@ RUN npm run build
 
 # Production stage
 FROM node:18-alpine
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
+WORKDIR .
+COPY --from=builder ./dist ./dist
+COPY --from=builder ./node_modules ./node_modules
 COPY package*.json ./
 
 EXPOSE 3000
