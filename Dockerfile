@@ -1,16 +1,24 @@
 # Build stage
 FROM node:18-alpine AS builder
-WORKDIR .
+WORKDIR /usr/src/app
+
+# Copy package files
 COPY package*.json ./
 RUN npm install
+
+# Copy source code
 COPY . .
+
+# Build the application
 RUN npm run build
 
 # Production stage
 FROM node:18-alpine
-WORKDIR .
-COPY --from=builder ./dist ./dist
-COPY --from=builder ./node_modules ./node_modules
+WORKDIR /usr/src/app
+
+# Copy built files and dependencies
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY package*.json ./
 
 EXPOSE 3000

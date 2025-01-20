@@ -3,12 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: shopco-backend:latest
     container_name: shopco-backend
     restart: unless-stopped
     networks:
       - shopco-net
       - traefik-net
-    environment:
+    env_file:
       - .env # Load environment variables from .env file
     labels:
       - traefik.enable=true
