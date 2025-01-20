@@ -1,11 +1,20 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "ES6",
     "module": "commonjs",
+    "lib": ["es6"],
+    "allowJs": true,
+    "outDir": "./dist", // This specifies where compiled files go
+    "rootDir": "./src", // This specifies where your source files are
     "strict": true,
+    "noImplicitAny": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./src/@types"],
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true
-  }
+  },
+  "include": ["src/**/*"], // This tells TypeScript which files to compile
+  "exclude": ["node_modules", "dist"] // This tells TypeScript which files to ignore
 }
