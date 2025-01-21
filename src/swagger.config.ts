@@ -1,4 +1,29 @@
 // swagger.config.ts
+import { updateUserSchema } from "./routes/userRoute";
+import { productSchema } from "./routes/productRoute";
+import { adminSchema } from "./routes/adminRoute";
+import { authSchema } from "./routes/authRoute";
+import { reviewSchema } from "./routes/reviewRoute";
+
+const routeSchemas = {
+  ...updateUserSchema,
+  ...productSchema,
+  ...adminSchema,
+  ...authSchema,
+  ...reviewSchema,
+  "/": {
+    get: {
+      tags: ["Home"],
+      summary: "Get the home page",
+      responses: {
+        "200": {
+          description: "Home page",
+        },
+      },
+    },
+  },
+};
+
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
@@ -18,6 +43,14 @@ const swaggerOptions = {
       {
         name: "Products",
         description: "The products managing API",
+      },
+      {
+        name: "User",
+        description: "The user managing API",
+      },
+      {
+        name: "Review",
+        description: "The review managing API",
       },
     ],
     components: {
@@ -58,7 +91,24 @@ const swaggerOptions = {
             },
           },
           example: {
+            username: "kimwong1118",
             email: "kimwong@example.com",
+            password: "password",
+          },
+        },
+        loginUser: {
+          type: "object",
+          required: ["email", "password"],
+          properties: {
+            email: {
+              type: "string",
+            },
+            password: {
+              type: "string",
+            },
+          },
+          example: {
+            username: "username",
             password: "password",
           },
         },
@@ -325,8 +375,9 @@ const swaggerOptions = {
         },
       },
     },
+    paths: routeSchemas,
   },
-  apis: ["./src/routes/*.ts"],
+  apis: [],
 };
 
 export default swaggerOptions;

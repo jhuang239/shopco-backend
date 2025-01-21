@@ -37,6 +37,10 @@ app.use("/review", reviewRoute);
 // app.use("/admin", isAdmin, adminRoute);
 app.use("/admin", adminRoute);
 
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
 sequelize.sync().then(() => {
   console.log("Database connected");
   relationshipInit(sequelize);
