@@ -13,6 +13,11 @@ export const updateUserSchema = {
     post: {
       tags: ["User"],
       summary: "Update the user details",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
       parameters: [
         {
           in: "path",
@@ -51,6 +56,11 @@ export const updateUserSchema = {
     delete: {
       tags: ["User"],
       summary: "Delete user image from Firebase",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
       parameters: [
         {
           in: "path",
@@ -79,6 +89,11 @@ export const updateUserSchema = {
     post: {
       summary: "Upload an image for the user",
       tags: ["User"],
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
       requestBody: {
         required: true,
         content: {

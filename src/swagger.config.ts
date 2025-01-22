@@ -4,6 +4,7 @@ import { productSchema } from "./routes/productRoute";
 import { adminSchema } from "./routes/adminRoute";
 import { authSchema } from "./routes/authRoute";
 import { reviewSchema } from "./routes/reviewRoute";
+import { cartSchema } from "./routes/cartRoute";
 
 const routeSchemas = {
   ...updateUserSchema,
@@ -11,6 +12,7 @@ const routeSchemas = {
   ...adminSchema,
   ...authSchema,
   ...reviewSchema,
+  ...cartSchema,
   "/": {
     get: {
       tags: ["Home"],

@@ -38,14 +38,14 @@ export default class Cart extends Model<
   @ForeignKey(() => User)
   @Validate({
     async userExists(value: string) {
-      const user = await User.findByPk(value);
+      const user = await User.findAll({ where: { username: value } });
       if (!user) {
         throw new Error("User does not exist");
       }
     },
   })
   @Column({
-    type: DataType.UUID,
+    type: DataType.STRING,
     allowNull: false,
   })
   declare user_id: string;
