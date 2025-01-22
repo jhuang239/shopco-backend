@@ -34,11 +34,12 @@ const relationshipInit = async (sequelize: Sequelize) => {
   User.hasMany(Review, { foreignKey: "user_id" });
   Review.belongsTo(User, { foreignKey: "user_id" });
 
-  // User.hasMany(Cart, { foreignKey: "user_id" });
-  // Cart.belongsTo(User, { foreignKey: "user_id" });
+  User.hasMany(Cart, { foreignKey: "user_id" });
+  Cart.belongsTo(User, { foreignKey: "user_id" });
+  Cart.belongsTo(Product, { foreignKey: "product_id" });
 
-  // User.hasOne(UserImg, { foreignKey: "user_id" });
-  // UserImg.belongsTo(User, { foreignKey: "user_id" });
+  User.hasOne(UserImg, { foreignKey: "user_id" });
+  UserImg.belongsTo(User, { foreignKey: "user_id" });
 
   await sequelize.sync();
 };
