@@ -17,11 +17,11 @@ const relationshipInit = async (sequelize: Sequelize) => {
     'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'
   );
 
-  Product.belongsToMany(Category, { through: 'ProductCategories' });
-  Product.belongsToMany(DressStyle, { through: 'ProductStyles' });
+  // Product.belongsToMany(Category, { through: 'ProductCategories' });
+  // Product.belongsToMany(DressStyle, { through: 'ProductStyles' });
 
-  Category.belongsToMany(Product, { through: 'ProductCategories' });
-  DressStyle.belongsToMany(Product, { through: 'ProductStyles' });
+  // Category.belongsToMany(Product, { through: 'ProductCategories' });
+  // DressStyle.belongsToMany(Product, { through: 'ProductStyles' });
 
   Brand.hasMany(Product, { foreignKey: "brand_id" });
   Product.belongsTo(Brand, { foreignKey: "brand_id" });
