@@ -15,7 +15,7 @@ import User from "../models/user";
 
 const addProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, description, price, stock, category_id, brand_id } =
+    const { name, description, price, stock, category_id, brand_id, style_id } =
       req.body as ProductAttributes;
     console.log(req.body);
     const product = await Product.create({
@@ -25,6 +25,7 @@ const addProduct = async (req: Request, res: Response, next: NextFunction) => {
       stock,
       category_id,
       brand_id,
+      style_id,
     });
     console.log("product", product);
     req.body.result_product_id = product.dataValues.id;
@@ -100,6 +101,14 @@ const getProducts = async (req: Request, res: Response) => {
           },
         },
       ],
+      attributes: {
+        include: [
+          [
+            literal(`(SELECT ROUND(COALESCE(AVG(rating), 0), 2) FROM reviews WHERE reviews.product_id = "Product".id)`),
+            'averageRating'
+          ]
+        ]
+      }
     });
 
     await Promise.all(
@@ -196,10 +205,49 @@ const getProductsByCategory = async (req: Request, res: Response) => {
 
 const getProductsByBrand = async (req: Request, res: Response) => {
   try {
-    const { brand_id } = req.params;
-    const products = await Product.findAll({
+    const { id } = req.params;
+    let products = await Product.findAll({
+      include: [
+        {
+          model: ProductImg,
+          separate: true,
+          limit: 1,
+          attributes: ["id", "file_name"],
+          order: [["createdAt", "ASC"]],
+        },
+        {
+          model: Category,
+          attributes: ["name"],
+        },
+        {
+          model: Brand,
+          attributes: ["name"],
+        },
+        {
+          model: Sale,
+          separate: true,
+          limit: 1,
+          attributes: ["discount"],
+          where: {
+            start_date: {
+              [Op.lte]: literal("CURRENT_DATE"),
+            },
+            end_date: {
+              [Op.gte]: literal("CURRENT_DATE"),
+            },
+          },
+        },
+      ],
+      attributes: {
+        include: [
+          [
+            literal(`(SELECT ROUND(COALESCE(AVG(rating), 0), 2) FROM reviews WHERE reviews.product_id = "Product".id)`),
+            'averageRating'
+          ]
+        ]
+      },
       where: {
-        brand_id,
+        brand_id: id,
       },
     });
     res.status(200).json(products);

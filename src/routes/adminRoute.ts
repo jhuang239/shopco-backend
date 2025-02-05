@@ -17,6 +17,7 @@ import {
 import { createProductImg } from "../controllers/product-imgController";
 import { upload } from "../middlewares/multer";
 import { createCode, deleteCode } from "../controllers/codeController";
+import { addStyle } from "../controllers/styleController";
 
 export const adminSchema = {
   "/admin/addProduct": {
@@ -427,6 +428,45 @@ export const adminSchema = {
       },
     },
   },
+  "/admin/addStyle": {
+    post: {
+      summary: "Create a new Style",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      tags: ["Admin"],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              $ref: "#/components/schemas/Style",
+            },
+          },
+        },
+      },
+      responses: {
+        "201": {
+          description: "Code created successfully",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/Code",
+              },
+            },
+          },
+        },
+        "401": {
+          description: "Unauthorized",
+        },
+        "500": {
+          description: "Server Error",
+        },
+      },
+    },
+  },
 };
 
 const router = express.Router();
@@ -465,5 +505,7 @@ router.post("/addCode", createCode);
 router.delete("/deleteCode/:id", deleteCode);
 
 router.post("/createSale", createSale);
+
+router.post("/addStyle", addStyle);
 
 export default router;

@@ -1,5 +1,5 @@
 import express from "express";
-import { getProducts, getProductById } from "../controllers/productController";
+import { getProducts, getProductById, getProductsByBrand } from "../controllers/productController";
 const router = express.Router();
 
 export const productSchema = {
@@ -7,6 +7,76 @@ export const productSchema = {
     get: {
       summary: "Retrieve a list of products",
       tags: ["Products"],
+      responses: {
+        "200": {
+          description: "A list of products",
+          content: {
+            "application/json": {
+              schema: {
+                type: "array",
+                items: {
+                  $ref: "#/components/schemas/Product",
+                },
+              },
+            },
+          },
+        },
+        "500": {
+          description: "An error occurred",
+        },
+      },
+    },
+  },
+  "/product/category/{id}": {
+    get: {
+      summary: "Retrieve a list of products",
+      tags: ["Products"],
+      parameters: [
+        {
+          in: "path",
+          name: "id",
+          required: true,
+          schema: {
+            type: "string",
+          },
+          description: "The product ID",
+        },
+      ],
+      responses: {
+        "200": {
+          description: "A list of products",
+          content: {
+            "application/json": {
+              schema: {
+                type: "array",
+                items: {
+                  $ref: "#/components/schemas/Product",
+                },
+              },
+            },
+          },
+        },
+        "500": {
+          description: "An error occurred",
+        },
+      },
+    },
+  },
+  "/product/brand/{id}": {
+    get: {
+      summary: "Retrieve a list of products",
+      tags: ["Products"],
+      parameters: [
+        {
+          in: "path",
+          name: "id",
+          required: true,
+          schema: {
+            type: "string",
+          },
+          description: "The product ID",
+        },
+      ],
       responses: {
         "200": {
           description: "A list of products",
@@ -66,5 +136,9 @@ export const productSchema = {
 router.get("/all", getProducts);
 
 router.get("/:id", getProductById);
+
+router.get("/category/:id", getProductById);
+
+router.get("/brand/:id", getProductsByBrand);
 
 export default router;

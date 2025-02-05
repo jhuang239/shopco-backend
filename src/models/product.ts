@@ -10,6 +10,7 @@ import {
 } from "sequelize-typescript";
 import Category from "./category";
 import Brand from "./brand";
+import DressStyle from "./dress-style";
 
 type ProductAttributes = {
   id: string;
@@ -19,6 +20,7 @@ type ProductAttributes = {
   stock: number;
   category_id: string;
   brand_id: string;
+  style_id: string;
 };
 
 type ProductCreationAttributes = Optional<ProductAttributes, "id">;
@@ -92,6 +94,22 @@ export default class Product extends Model<
     allowNull: false,
   })
   declare brand_id: string;
+
+  @Validate({
+    async styleExists(value: string) {
+      const style = await DressStyle.findByPk(value);
+      if (!style) {
+        throw new Error("Style does not exist");
+      }
+    },
+  })
+  @ForeignKey(() => DressStyle)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+  })
+  declare style_id: string;
+
 }
 
 export { ProductAttributes };

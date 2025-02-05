@@ -187,6 +187,7 @@ const swaggerOptions = {
             "category_id",
             "brand_id",
             "images",
+            "style_id",
           ],
           properties: {
             name: {
@@ -228,6 +229,26 @@ const swaggerOptions = {
               },
               description: "The images of the product",
             },
+            style_id: {
+              type: "string",
+              description: "The id of the style",
+              example: "90de8b53-aadd-4983-9740-9a821898b9e8",
+            },
+          },
+        },
+        Style: {
+          type: "object",
+          required: ["name"],
+          properties: {
+            id: {
+              type: "string",
+            },
+            name: {
+              type: "string",
+            },
+          },
+          example: {
+            name: "Casual",
           },
         },
         Brand: {

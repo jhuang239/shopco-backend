@@ -9,6 +9,7 @@ import Sale from "../models/sale";
 import UserImg from "../models/user-img";
 
 import { QueryInterface, Sequelize } from "sequelize";
+import DressStyle from "../models/dress-style";
 
 const relationshipInit = async (sequelize: Sequelize) => {
   const queryInterface: QueryInterface = sequelize.getQueryInterface();
@@ -30,6 +31,9 @@ const relationshipInit = async (sequelize: Sequelize) => {
 
   Product.hasMany(Review, { foreignKey: "product_id" });
   Review.belongsTo(Product, { foreignKey: "product_id" });
+
+  DressStyle.hasMany(Product, { foreignKey: "style_id" });
+  Product.belongsTo(DressStyle, { foreignKey: "style_id" });
 
   User.hasMany(Review, { foreignKey: "user_id" });
   Review.belongsTo(User, { foreignKey: "user_id" });
