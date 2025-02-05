@@ -2,8 +2,8 @@ import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
-const JWT_SECRET = process.env.JWT_SECRET_KEY;
-const JWT_EXPIRATION = process.env.JWT_EXPIRATION;
+const JWT_SECRET = process.env.JWT_SECRET_KEY as string;
+const JWT_EXPIRATION = parseInt(process.env.JWT_EXPIRATION as string, 10);
 
 type jwtPayload = {
   username: string;

@@ -1,4 +1,6 @@
 import { Optional } from "sequelize";
+import { HasMany, BelongsTo } from "sequelize-typescript";
+import { BelongsToMany } from "sequelize-typescript";
 import ProductImg from "./product-img";
 import {
   Table,
@@ -11,6 +13,7 @@ import {
 import Category from "./category";
 import Brand from "./brand";
 import DressStyle from "./dress-style";
+import Sale from "./sale";
 
 type ProductAttributes = {
   id: string;
@@ -18,9 +21,11 @@ type ProductAttributes = {
   description: string;
   price: number;
   stock: number;
-  category_id: string;
+  category_ids: string[];
   brand_id: string;
-  style_id: string;
+  style_ids: string[];
+  categories?: Category[];
+  styles?: DressStyle[];
 };
 
 type ProductCreationAttributes = Optional<ProductAttributes, "id">;
@@ -67,18 +72,21 @@ export default class Product extends Model<
 
   @ForeignKey(() => Category)
   @Validate({
-    async categoryExists(value: string) {
-      const category = await Category.findByPk(value);
-      if (!category) {
-        throw new Error("Category does not exist");
+    async categoryExists(value: string[]) {
+      // Check each category ID individually
+      for (const categoryId of value) {
+        const category = await Category.findByPk(categoryId);
+        if (!category) {
+          throw new Error(`Category with ID ${categoryId} does not exist`);
+        }
       }
     },
   })
   @Column({
-    type: DataType.UUID,
+    type: DataType.ARRAY(DataType.UUID),
     allowNull: false,
   })
-  declare category_id: string;
+  declare category_ids: string[];
 
   @Validate({
     async brandExists(value: string) {
@@ -96,20 +104,38 @@ export default class Product extends Model<
   declare brand_id: string;
 
   @Validate({
-    async styleExists(value: string) {
-      const style = await DressStyle.findByPk(value);
-      if (!style) {
-        throw new Error("Style does not exist");
+    async styleExists(value: string[]) {
+      // Check each style ID individually
+      for (const styleId of value) {
+        const style = await DressStyle.findByPk(styleId);
+        if (!style) {
+          throw new Error(`Style with ID ${styleId} does not exist`);
+        }
       }
     },
   })
   @ForeignKey(() => DressStyle)
   @Column({
-    type: DataType.UUID,
+    type: DataType.ARRAY(DataType.UUID),
     allowNull: false,
   })
-  declare style_id: string;
+  declare style_ids: string[];
 
+
+  @HasMany(() => ProductImg, {
+    foreignKey: 'product_id',
+  })
+  ProductImgs?: ProductImg[];
+
+  @BelongsTo(() => Brand, {
+    foreignKey: 'brand_id',
+  })
+  Brand?: Brand;
+
+  @HasMany(() => Sale, {
+    foreignKey: 'product_id',
+  })
+  Sales?: Sale[];
 }
 
 export { ProductAttributes };

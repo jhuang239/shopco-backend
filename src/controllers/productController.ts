@@ -8,24 +8,28 @@ import {
   getFileByFileName,
   deleteFileFromFirebase,
 } from "../middlewares/firebase";
-import { literal, Op } from "sequelize";
+import { literal, Op, Sequelize } from "sequelize";
 import Sale from "../models/sale";
 import Review from "../models/review";
 import User from "../models/user";
+import DressStyle from "../models/dress-style";
 
 const addProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, description, price, stock, category_id, brand_id, style_id } =
-      req.body as ProductAttributes;
+    const { name, description, price, stock, category_ids, brand_id, style_ids } =
+      req.body;
+    const ctg_ids = category_ids.split(",");
+    const sty_ids = style_ids.split(",");
+    console.log(ctg_ids);
     console.log(req.body);
     const product = await Product.create({
       name,
       description,
       price,
       stock,
-      category_id,
+      category_ids: ctg_ids,
       brand_id,
-      style_id,
+      style_ids: sty_ids,
     });
     console.log("product", product);
     req.body.result_product_id = product.dataValues.id;
@@ -45,7 +49,7 @@ const updateProduct = async (
   next: NextFunction
 ) => {
   const { id } = req.params;
-  const { name, description, price, stock, category_id, brand_id } =
+  const { name, description, price, stock, category_ids, brand_id } =
     req.body as ProductAttributes;
   try {
     const product = await Product.findByPk(id);
@@ -54,7 +58,7 @@ const updateProduct = async (
       return;
     }
     const result = await Product.update(
-      { name, description, price, stock, category_id, brand_id },
+      { name, description, price, stock, category_ids, brand_id },
       { where: { id } }
     );
     next();
@@ -79,12 +83,8 @@ const getProducts = async (req: Request, res: Response) => {
           order: [["createdAt", "ASC"]],
         },
         {
-          model: Category,
-          attributes: ["name"],
-        },
-        {
           model: Brand,
-          attributes: ["name"],
+          attributes: ["id", "name"],
         },
         {
           model: Sale,
@@ -104,25 +104,59 @@ const getProducts = async (req: Request, res: Response) => {
       attributes: {
         include: [
           [
-            literal(`(SELECT ROUND(COALESCE(AVG(rating), 0), 2) FROM reviews WHERE reviews.product_id = "Product".id)`),
+            literal(`(
+              SELECT ROUND(COALESCE(AVG(rating), 0), 2) 
+              FROM reviews 
+              WHERE reviews.product_id = "Product".id
+            )`),
             'averageRating'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', c.id,
+                  'name', c.name
+                )
+              )
+              FROM categories c
+              WHERE c.id = ANY("Product".category_ids::uuid[])
+            )`),
+            'categories'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', ds.id,
+                  'name', ds.name
+                )
+              )
+              FROM dress_styles ds
+              WHERE ds.id = ANY("Product".style_ids::uuid[])
+            )`),
+            'styles'
           ]
         ]
-      }
+      },
+      raw: false,
+      nest: true
     });
 
+    // Handle image URLs
     await Promise.all(
       products.map(async (product: any) => {
-        const file_name =
-          product.dataValues.ProductImgs[0].dataValues.file_name;
-        const url = await getFileByFileName(file_name);
-        product.dataValues.ProductImgs[0].dataValues.url = url;
-        return product; // Return the modified product
+        if (product.ProductImgs?.[0]) {
+          const url = await getFileByFileName(product.ProductImgs[0].file_name);
+          product.dataValues.ProductImgs[0].dataValues.url = url;
+        }
+        return product;
       })
     );
 
-    res.status(200).json(products); // Send the original products array which was modified
+    res.status(200).json(products);
   } catch (error) {
+    console.error('Error:', error);
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
     } else {
@@ -134,86 +168,19 @@ const getProducts = async (req: Request, res: Response) => {
 const getProductById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const product: any = await Product.findByPk(id, {
-      include: [
-        {
-          model: Review,
-          attributes: ["comment", "rating", "createdAt"],
-          include: [
-            {
-              model: User,
-              attributes: ["username"],
-            },
-          ],
-        },
-        {
-          model: ProductImg,
-          attributes: ["id", "file_name"],
-        },
-        {
-          model: Category,
-          attributes: ["name"],
-        },
-        {
-          model: Brand,
-          attributes: ["name"],
-        },
-        {
-          model: Sale,
-          separate: true,
-          limit: 1,
-          attributes: ["discount"],
-          where: {
-            start_date: {
-              [Op.lte]: literal("CURRENT_DATE"),
-            },
-            end_date: {
-              [Op.gte]: literal("CURRENT_DATE"),
-            },
-          },
-        },
-      ],
-      order: [[Review, "createdAt", "DESC"]],
-    });
 
-    await Promise.all(
-      product.dataValues.ProductImgs.map(async (img: any) => {
-        const url = await getFileByFileName(img.dataValues.file_name);
-        img.dataValues.url = url;
-        return img;
-      })
-    )
-
-    res.status(200).json(product);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "An unknown error occurred" });
-    }
-  }
-};
-
-const getProductsByCategory = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    console.log(id);
-    let products = await Product.findAll({
+    const product: any = await Product.findOne({
+      where: { id },
       include: [
         {
           model: ProductImg,
           separate: true,
-          limit: 1,
           attributes: ["id", "file_name"],
           order: [["createdAt", "ASC"]],
         },
         {
-          model: Category,
-          attributes: ["name"],
-        },
-        {
           model: Brand,
-          attributes: ["name"],
+          attributes: ["id", "name"],
         },
         {
           model: Sale,
@@ -233,30 +200,160 @@ const getProductsByCategory = async (req: Request, res: Response) => {
       attributes: {
         include: [
           [
-            literal(`(SELECT ROUND(COALESCE(AVG(rating), 0), 2) FROM reviews WHERE reviews.product_id = "Product".id)`),
+            literal(`(
+              SELECT ROUND(COALESCE(AVG(rating), 0), 2) 
+              FROM reviews 
+              WHERE reviews.product_id = "Product".id
+            )`),
             'averageRating'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', c.id,
+                  'name', c.name
+                )
+              )
+              FROM categories c
+              WHERE c.id = ANY("Product".category_ids::uuid[])
+            )`),
+            'categories'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', ds.id,
+                  'name', ds.name
+                )
+              )
+              FROM dress_styles ds
+              WHERE ds.id = ANY("Product".style_ids::uuid[])
+            )`),
+            'styles'
           ]
         ]
       },
+      raw: false,
+      nest: true
+    });
+
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+    }
+
+    await Promise.all(
+      product.ProductImgs.map(async (img: any) => {
+        const url = await getFileByFileName(img.file_name);
+        img.dataValues.url = url;
+        return img;
+      })
+    )
+
+    res.status(200).json(product);
+  } catch (error) {
+    console.error('Error:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
+  }
+};
+
+const getProductsByCategory = async (req: Request, res: Response) => {
+  try {
+    const { category_ids } = req.body;
+    let products = await Product.findAll({
+      include: [
+        {
+          model: ProductImg,
+          separate: true,
+          limit: 1,
+          attributes: ["id", "file_name"],
+          order: [["createdAt", "ASC"]],
+        },
+        {
+          model: Brand,
+          attributes: ["id", "name"],
+        },
+        {
+          model: Sale,
+          separate: true,
+          limit: 1,
+          attributes: ["discount"],
+          where: {
+            start_date: {
+              [Op.lte]: literal("CURRENT_DATE"),
+            },
+            end_date: {
+              [Op.gte]: literal("CURRENT_DATE"),
+            },
+          },
+        },
+      ],
+      attributes: {
+        include: [
+          [
+            literal(`(
+              SELECT ROUND(COALESCE(AVG(rating), 0), 2) 
+              FROM reviews 
+              WHERE reviews.product_id = "Product".id
+            )`),
+            'averageRating'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', c.id,
+                  'name', c.name
+                )
+              )
+              FROM categories c
+              WHERE c.id = ANY("Product".category_ids::uuid[])
+            )`),
+            'categories'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', ds.id,
+                  'name', ds.name
+                )
+              )
+              FROM dress_styles ds
+              WHERE ds.id = ANY("Product".style_ids::uuid[])
+            )`),
+            'styles'
+          ]
+        ]
+      },
+      raw: false,
+      nest: true,
       where: {
-        category_id: id,
+        category_ids: {
+          [Op.contains]: category_ids,
+        },
       },
     });
 
-    console.log(products);
-
-    // await Promise.all(
-    //   products.map(async (product: any) => {
-    //     const file_name =
-    //       product.dataValues.ProductImgs[0].dataValues.file_name;
-    //     const url = await getFileByFileName(file_name);
-    //     product.dataValues.ProductImgs[0].dataValues.url = url;
-    //     return product; // Return the modified product
-    //   })
-    // );
+    // Handle image URLs
+    await Promise.all(
+      products.map(async (product: any) => {
+        if (product.ProductImgs?.[0]) {
+          const url = await getFileByFileName(product.ProductImgs[0].file_name);
+          product.dataValues.ProductImgs[0].dataValues.url = url;
+        }
+        return product;
+      })
+    );
 
     res.status(200).json(products);
   } catch (error) {
+    console.error('Error:', error);
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
     } else {
@@ -278,12 +375,8 @@ const getProductsByBrand = async (req: Request, res: Response) => {
           order: [["createdAt", "ASC"]],
         },
         {
-          model: Category,
-          attributes: ["name"],
-        },
-        {
           model: Brand,
-          attributes: ["name"],
+          attributes: ["id", "name"],
         },
         {
           model: Sale,
@@ -303,23 +396,53 @@ const getProductsByBrand = async (req: Request, res: Response) => {
       attributes: {
         include: [
           [
-            literal(`(SELECT ROUND(COALESCE(AVG(rating), 0), 2) FROM reviews WHERE reviews.product_id = "Product".id)`),
+            literal(`(
+              SELECT ROUND(COALESCE(AVG(rating), 0), 2) 
+              FROM reviews 
+              WHERE reviews.product_id = "Product".id
+            )`),
             'averageRating'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', c.id,
+                  'name', c.name
+                )
+              )
+              FROM categories c
+              WHERE c.id = ANY("Product".category_ids::uuid[])
+            )`),
+            'categories'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', ds.id,
+                  'name', ds.name
+                )
+              )
+              FROM dress_styles ds
+              WHERE ds.id = ANY("Product".style_ids::uuid[])
+            )`),
+            'styles'
           ]
         ]
       },
-      where: {
-        brand_id: id,
-      },
+      where: { brand_id: id },
+      raw: false,
+      nest: true
     });
 
     await Promise.all(
       products.map(async (product: any) => {
-        const file_name =
-          product.dataValues.ProductImgs[0].dataValues.file_name;
-        const url = await getFileByFileName(file_name);
-        product.dataValues.ProductImgs[0].dataValues.url = url;
-        return product; // Return the modified product
+        if (product.ProductImgs?.[0]) {
+          const url = await getFileByFileName(product.ProductImgs[0].file_name);
+          product.dataValues.ProductImgs[0].dataValues.url = url;
+        }
+        return product;
       })
     );
 
@@ -354,6 +477,9 @@ const deleteProduct = async (req: Request, res: Response) => {
   }
 };
 
+const getProductsByStyle = async (req: Request, res: Response) => {
+};
+
 export {
   addProduct,
   updateProduct,
@@ -361,5 +487,6 @@ export {
   getProductById,
   getProductsByCategory,
   getProductsByBrand,
+  getProductsByStyle,
   deleteProduct,
 };

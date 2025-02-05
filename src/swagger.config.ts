@@ -184,10 +184,10 @@ const swaggerOptions = {
             "description",
             "price",
             "stock",
-            "category_id",
+            "category_ids",
             "brand_id",
             "images",
-            "style_id",
+            "style_ids",
           ],
           properties: {
             name: {
@@ -211,10 +211,13 @@ const swaggerOptions = {
               description: "The stock of the product",
               example: 50,
             },
-            category_id: {
-              type: "string",
-              description: "The id of the category",
-              example: "90de8b53-aadd-4983-9740-9a821898b9e8",
+            category_ids: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "The id of the categories",
+              example: ["90de8b53-aadd-4983-9740-9a821898b9e8"],
             },
             brand_id: {
               type: "string",
@@ -229,10 +232,13 @@ const swaggerOptions = {
               },
               description: "The images of the product",
             },
-            style_id: {
-              type: "string",
-              description: "The id of the style",
-              example: "90de8b53-aadd-4983-9740-9a821898b9e8",
+            style_ids: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "The id of the styles",
+              example: ["90de8b53-aadd-4983-9740-9a821898b9e8"],
             },
           },
         },
