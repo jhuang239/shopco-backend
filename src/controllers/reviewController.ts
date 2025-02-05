@@ -3,8 +3,11 @@ import Review, { ReviewAttributes } from "../models/review";
 
 const createReview = async (req: Request, res: Response) => {
   try {
-    const { comment, rating, user_id, product_id } =
+    const { comment, rating, product_id } =
       req.body as ReviewAttributes;
+    const user_id = req.body.user.username;
+    console.log(user_id);
+
     const review = await Review.create({
       comment,
       rating,

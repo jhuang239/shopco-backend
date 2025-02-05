@@ -21,7 +21,6 @@ const relationshipInit = async (sequelize: Sequelize) => {
   Product.belongsToMany(DressStyle, { through: 'ProductStyles' });
 
   Category.belongsToMany(Product, { through: 'ProductCategories' });
-
   DressStyle.belongsToMany(Product, { through: 'ProductStyles' });
 
   Brand.hasMany(Product, { foreignKey: "brand_id" });

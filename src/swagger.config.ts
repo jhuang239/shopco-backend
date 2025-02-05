@@ -342,7 +342,7 @@ const swaggerOptions = {
         },
         Review: {
           type: "object",
-          required: ["comment", "rating", "user_id", "product_id"],
+          required: ["comment", "rating", "product_id"],
           properties: {
             comment: {
               type: "string",
@@ -351,10 +351,6 @@ const swaggerOptions = {
             rating: {
               type: "number",
               example: 5, // 1-5
-            },
-            user_id: {
-              type: "string",
-              example: "a618454f-3838-4527-88d6-8ea4eb897cf0",
             },
             product_id: {
               type: "string",

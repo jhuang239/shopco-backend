@@ -6,7 +6,6 @@ import Brand from "../models/brand";
 import { ProductAttributes } from "../models/product";
 import {
   getFileByFileName,
-  deleteFileFromFirebase,
 } from "../middlewares/firebase";
 import { literal, Op, Sequelize } from "sequelize";
 import Sale from "../models/sale";
@@ -172,6 +171,12 @@ const getProductById = async (req: Request, res: Response) => {
     const product: any = await Product.findOne({
       where: { id },
       include: [
+        {
+          model: Review,
+          separate: true,
+          attributes: ["id", "rating", "comment", "user_id", "createdAt"],
+          order: [["createdAt", "DESC"]],
+        },
         {
           model: ProductImg,
           separate: true,
