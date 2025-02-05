@@ -120,6 +120,7 @@ const getProducts = async (req: Request, res: Response) => {
         return product; // Return the modified product
       })
     );
+
     res.status(200).json(products); // Send the original products array which was modified
   } catch (error) {
     if (error instanceof Error) {
@@ -133,7 +134,7 @@ const getProducts = async (req: Request, res: Response) => {
 const getProductById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const product = await Product.findByPk(id, {
+    const product: any = await Product.findByPk(id, {
       include: [
         {
           model: Review,
@@ -175,6 +176,14 @@ const getProductById = async (req: Request, res: Response) => {
       order: [[Review, "createdAt", "DESC"]],
     });
 
+    await Promise.all(
+      product.dataValues.ProductImgs.map(async (img: any) => {
+        const url = await getFileByFileName(img.dataValues.file_name);
+        img.dataValues.url = url;
+        return img;
+      })
+    )
+
     res.status(200).json(product);
   } catch (error) {
     if (error instanceof Error) {
@@ -187,12 +196,62 @@ const getProductById = async (req: Request, res: Response) => {
 
 const getProductsByCategory = async (req: Request, res: Response) => {
   try {
-    const { category_id } = req.params;
-    const products = await Product.findAll({
+    const { id } = req.params;
+    let products = await Product.findAll({
+      include: [
+        {
+          model: ProductImg,
+          separate: true,
+          limit: 1,
+          attributes: ["id", "file_name"],
+          order: [["createdAt", "ASC"]],
+        },
+        {
+          model: Category,
+          attributes: ["name"],
+        },
+        {
+          model: Brand,
+          attributes: ["name"],
+        },
+        {
+          model: Sale,
+          separate: true,
+          limit: 1,
+          attributes: ["discount"],
+          where: {
+            start_date: {
+              [Op.lte]: literal("CURRENT_DATE"),
+            },
+            end_date: {
+              [Op.gte]: literal("CURRENT_DATE"),
+            },
+          },
+        },
+      ],
+      attributes: {
+        include: [
+          [
+            literal(`(SELECT ROUND(COALESCE(AVG(rating), 0), 2) FROM reviews WHERE reviews.product_id = "Product".id)`),
+            'averageRating'
+          ]
+        ]
+      },
       where: {
-        category_id,
+        brand_id: id,
       },
     });
+
+    await Promise.all(
+      products.map(async (product: any) => {
+        const file_name =
+          product.dataValues.ProductImgs[0].dataValues.file_name;
+        const url = await getFileByFileName(file_name);
+        product.dataValues.ProductImgs[0].dataValues.url = url;
+        return product; // Return the modified product
+      })
+    );
+
     res.status(200).json(products);
   } catch (error) {
     if (error instanceof Error) {
@@ -250,6 +309,17 @@ const getProductsByBrand = async (req: Request, res: Response) => {
         brand_id: id,
       },
     });
+
+    await Promise.all(
+      products.map(async (product: any) => {
+        const file_name =
+          product.dataValues.ProductImgs[0].dataValues.file_name;
+        const url = await getFileByFileName(file_name);
+        product.dataValues.ProductImgs[0].dataValues.url = url;
+        return product; // Return the modified product
+      })
+    );
+
     res.status(200).json(products);
   } catch (error) {
     if (error instanceof Error) {
