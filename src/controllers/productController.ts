@@ -197,6 +197,7 @@ const getProductById = async (req: Request, res: Response) => {
 const getProductsByCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    console.log(id);
     let products = await Product.findAll({
       include: [
         {
@@ -238,19 +239,21 @@ const getProductsByCategory = async (req: Request, res: Response) => {
         ]
       },
       where: {
-        brand_id: id,
+        category_id: id,
       },
     });
 
-    await Promise.all(
-      products.map(async (product: any) => {
-        const file_name =
-          product.dataValues.ProductImgs[0].dataValues.file_name;
-        const url = await getFileByFileName(file_name);
-        product.dataValues.ProductImgs[0].dataValues.url = url;
-        return product; // Return the modified product
-      })
-    );
+    console.log(products);
+
+    // await Promise.all(
+    //   products.map(async (product: any) => {
+    //     const file_name =
+    //       product.dataValues.ProductImgs[0].dataValues.file_name;
+    //     const url = await getFileByFileName(file_name);
+    //     product.dataValues.ProductImgs[0].dataValues.url = url;
+    //     return product; // Return the modified product
+    //   })
+    // );
 
     res.status(200).json(products);
   } catch (error) {

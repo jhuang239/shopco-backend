@@ -1,5 +1,5 @@
 import express from "express";
-import { getProducts, getProductById, getProductsByBrand } from "../controllers/productController";
+import { getProducts, getProductById, getProductsByBrand, getProductsByCategory } from "../controllers/productController";
 const router = express.Router();
 
 export const productSchema = {
@@ -39,7 +39,7 @@ export const productSchema = {
           schema: {
             type: "string",
           },
-          description: "The product ID",
+          description: "The Category ID",
         },
       ],
       responses: {
@@ -137,7 +137,7 @@ router.get("/all", getProducts);
 
 router.get("/:id", getProductById);
 
-router.get("/category/:id", getProductById);
+router.get("/category/:id", getProductsByCategory);
 
 router.get("/brand/:id", getProductsByBrand);
 
