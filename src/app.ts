@@ -25,39 +25,11 @@ const PORT = process.env.PORT || 3000;
 const swaggerSpec = swaggerJSDoc(config);
 
 // Add these middleware before your routes
-app.use(cors());
-
-const resetCache = (req: any, res: any, next: NextFunction) => {
-  // Clear all response headers
-  res.removeHeader('Cache-Control');
-  res.removeHeader('ETag');
-  res.removeHeader('Last-Modified');
-
-  // Set new cache headers
-  res.set({
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
-  });
-
-  // Clear session
-  if (req.session) {
-    req.session.destroy();
-  }
-
-  // Clear params and query
-  req.params = {};
-  req.query = {};
-
-  // Clear any local variables
-  res.locals = {};
-
-  next();
-};
-
-// Use it as middleware
-app.use(resetCache);
-
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json()); // <-- This is required to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // <-- This is for parsing URL-encoded bodies
 
