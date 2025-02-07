@@ -502,6 +502,7 @@ const getProductsWithFilters = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     console.log('page:', page);
+
     const limit = 9;
     const offset = (page - 1) * limit
 
