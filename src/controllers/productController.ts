@@ -15,6 +15,7 @@ import Review from "../models/review";
 
 
 const addProduct = async (req: Request, res: Response, next: NextFunction) => {
+
   try {
     const { name, description, price, stock, category_ids, brand_id, style_ids } =
       req.body;
