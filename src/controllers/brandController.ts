@@ -49,4 +49,5 @@ const deleteBrand = async (req: Request, res: Response) => {
   }
 };
 
+
 export { addBrand, getBrands, deleteBrand };
