@@ -5,6 +5,7 @@ import { adminSchema } from "./routes/adminRoute";
 import { authSchema } from "./routes/authRoute";
 import { reviewSchema } from "./routes/reviewRoute";
 import { cartSchema } from "./routes/cartRoute";
+import { reviewPublicSchema } from "./routes/reviewPublicRoute";
 
 const routeSchemas = {
   ...updateUserSchema,
@@ -12,6 +13,7 @@ const routeSchemas = {
   ...adminSchema,
   ...authSchema,
   ...reviewSchema,
+  ...reviewPublicSchema,
   ...cartSchema,
   "/": {
     get: {

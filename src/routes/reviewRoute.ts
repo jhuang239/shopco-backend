@@ -1,9 +1,7 @@
 import express, { Request, Response } from "express";
-import {
-  createReview,
-  getReviewByProductId,
-} from "../controllers/reviewController";
+import { createReview } from "../controllers/reviewController";
 import { isAuthenticated } from "../middlewares/authentication";
+import { get } from "http";
 
 const router = express.Router();
 
@@ -46,45 +44,8 @@ export const reviewSchema = {
       },
     },
   },
-  "/Review/{id}": {
-    get: {
-      summary: "Retrieve a review by ID",
-      tags: ["Review"],
-      parameters: [
-        {
-          name: "id",
-          in: "path",
-          required: true,
-          schema: {
-            type: "string",
-          },
-          description: "The review ID",
-        },
-      ],
-      responses: {
-        "200": {
-          description: "A review object",
-          content: {
-            "application/json": {
-              schema: {
-                $ref: "#/components/schemas/Review",
-              },
-            },
-          },
-        },
-        "404": {
-          description: "Review not found",
-        },
-        "500": {
-          description: "An error occurred",
-        },
-      },
-    },
-  },
 };
 
 router.post("/CreateReview", isAuthenticated, createReview);
-
-router.get("/:id", getReviewByProductId);
 
 export default router;

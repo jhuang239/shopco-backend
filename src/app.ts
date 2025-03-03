@@ -10,6 +10,7 @@ import cartRoute from "./routes/cartRoute";
 import authRoute from "./routes/authRoute";
 import adminRoute from "./routes/adminRoute";
 import reviewRoute from "./routes/reviewRoute";
+import reviewPublicRoute from "./routes/reviewPublicRoute";
 //* swagger
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
@@ -39,6 +40,7 @@ app.use("/products", productRoute);
 app.use("/auth", authRoute);
 app.use("/cart", isAuthenticated, cartRoute);
 app.use("/review", isAuthenticated, reviewRoute);
+app.use("/reviewPublic", reviewPublicRoute);
 // app.use("/admin", isAdmin, adminRoute);
 app.use("/admin", adminRoute);
 

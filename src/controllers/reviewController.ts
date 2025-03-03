@@ -77,4 +77,21 @@ const getReviewByProductId = async (req: Request, res: Response) => {
   }
 };
 
-export { createReview, updateReview, deleteReview, getReviewByProductId };
+const getTop9Reviews = async (req: Request, res: Response) => {
+  console.log("getTop10Reviews");
+  try {
+    const reviews = await Review.findAll({
+      limit: 9,
+      order: [["rating", "DESC"]],
+    });
+    res.status(200).json(reviews);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+}
+
+export { createReview, updateReview, deleteReview, getReviewByProductId, getTop9Reviews };
