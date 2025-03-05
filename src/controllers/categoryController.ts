@@ -38,6 +38,7 @@ const deleteCategory = async (req: Request, res: Response) => {
 
 const getCategories = async (req: Request, res: Response) => {
   try {
+    console.log("getCategories");
     const categories = await Category.findAll();
     res.status(200).json(categories);
   } catch (error) {
