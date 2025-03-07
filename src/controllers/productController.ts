@@ -182,6 +182,117 @@ const getProducts = async (req: Request, res: Response) => {
   }
 };
 
+const getLatestProducts = async (req: Request, res: Response) => {
+  console.log('getLatestProducts');
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 4;
+    const offset = (page - 1) * limit
+
+    const { count, rows: products } = await Product.findAndCountAll({
+      include: [
+        {
+          model: ProductImg,
+          separate: true,
+          limit: 1,
+          attributes: ["id", "file_name"],
+          order: [["createdAt", "ASC"]],
+        },
+        {
+          model: Brand,
+          attributes: ["id", "name"],
+        },
+        {
+          model: Sale,
+          separate: true,
+          limit: 1,
+          attributes: ["discount"],
+          where: {
+            start_date: {
+              [Op.lte]: literal("CURRENT_DATE"),
+            },
+            end_date: {
+              [Op.gte]: literal("CURRENT_DATE"),
+            },
+          },
+        },
+      ],
+      attributes: {
+        include: [
+          [
+            literal(`(
+              SELECT ROUND(COALESCE(AVG(rating), 0), 2) 
+              FROM reviews 
+              WHERE reviews.product_id = "Product".id
+            )`),
+            'averageRating'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', c.id,
+                  'name', c.name
+                )
+              )
+              FROM categories c
+              WHERE c.id = ANY("Product".category_ids::uuid[])
+            )`),
+            'categories'
+          ],
+          [
+            literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', ds.id,
+                  'name', ds.name
+                )
+              )
+              FROM dress_styles ds
+              WHERE ds.id = ANY("Product".style_ids::uuid[])
+            )`),
+            'styles'
+          ]
+        ]
+      },
+      limit,
+      order: [["createdAt", "DESC"]],
+      offset,
+      raw: false,
+      nest: true
+    });
+
+    // Handle image URLs
+    await Promise.all(
+      products.map(async (product: any) => {
+        if (product.ProductImgs?.[0]) {
+          const url = await getFileByFileName(product.ProductImgs[0].file_name);
+          product.dataValues.ProductImgs[0].dataValues.url = url;
+        }
+        return product;
+      })
+    );
+
+    const result = {
+      items: products,
+      total: count,
+      currentPage: page,
+      totalPages: Math.ceil(count / limit),
+      limit
+    };
+
+    res.status(200).json(result);
+
+  } catch (error) {
+    console.error('Error:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
+  }
+};
+
 const getProductById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -194,6 +305,7 @@ const getProductById = async (req: Request, res: Response) => {
           separate: true,
           attributes: ["id", "rating", "comment", "user_id", "createdAt"],
           order: [["createdAt", "DESC"]],
+          limit: 6
         },
         {
           model: ProductImg,
@@ -730,6 +842,9 @@ const getProductsByBrand = async (req: Request, res: Response) => {
   }
 };
 
+
+
+
 const deleteProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -757,5 +872,7 @@ export {
   getProducts,
   getProductById,
   deleteProduct,
-  getProductsWithFilters
+  getProductsWithFilters,
+  getProductsByBrand,
+  getLatestProducts
 };

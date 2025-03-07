@@ -1,5 +1,5 @@
 import express from "express";
-import { getProducts, getProductById, getProductsWithFilters } from "../controllers/productController";
+import { getProducts, getProductById, getProductsWithFilters, getLatestProducts } from "../controllers/productController";
 const router = express.Router();
 
 export const productSchema = {
@@ -256,18 +256,42 @@ export const productSchema = {
       },
     },
   },
+  "/products/latest": {
+    get: {
+      summary: "Retrieve a list of products",
+      tags: ["Products"],
+      responses: {
+        "200": {
+          description: "A list of products",
+          content: {
+            "application/json": {
+              schema: {
+                type: "array",
+                items: {
+                  $ref: "#/components/schemas/Product",
+                },
+              },
+            },
+          },
+        },
+        "500": {
+          description: "An error occurred",
+        },
+      },
+    },
+  },
 };
 
 
 
 router.get("/all", getProducts);
-
+router.get("/latest", getLatestProducts);
 router.get("/:id", getProductById);
-
 router.post("/search", getProductsWithFilters);
 
-router.get("/dummy/haha", (req, res) => {
-  res.send("Hello World!");
-});
+
+// router.get("/dummy/haha", (req, res) => {
+//   res.send("Hello World!");
+// });
 
 export default router;
