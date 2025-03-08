@@ -397,219 +397,146 @@ const getProductById = async (req: Request, res: Response) => {
   }
 };
 
-// const getProductsByCategory = async (req: Request, res: Response) => {
-//   try {
+const getProductsByCategory = async (req: Request, res: Response) => {
+  try {
+    console.log('req.params', req.params);
+    const categoryName = req.query.categoryName as string;
+    console.log('categoryName:', categoryName);
+    if (!categoryName) {
+      res.status(400).json({ error: "Category name is required" });
+    }
 
-//     const page = parseInt(req.query.page as string) || 1;
-//     const limit = 9;
-//     const offset = (page - 1) * limit
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 9;
+    const offset = (page - 1) * limit;
 
-//     const { category_ids } = req.body;
-//     const { count, rows: products } = await Product.findAndCountAll({
-//       include: [
-//         {
-//           model: ProductImg,
-//           separate: true,
-//           limit: 1,
-//           attributes: ["id", "file_name"],
-//           order: [["createdAt", "ASC"]],
-//         },
-//         {
-//           model: Brand,
-//           attributes: ["id", "name"],
-//         },
-//         {
-//           model: Sale,
-//           separate: true,
-//           limit: 1,
-//           attributes: ["discount"],
-//           where: {
-//             start_date: {
-//               [Op.lte]: literal("CURRENT_DATE"),
-//             },
-//             end_date: {
-//               [Op.gte]: literal("CURRENT_DATE"),
-//             },
-//           },
-//         },
-//       ],
-//       attributes: {
-//         include: [
-//           [
-//             literal(`(
-//               SELECT ROUND(COALESCE(AVG(rating), 0), 2) 
-//               FROM reviews 
-//               WHERE reviews.product_id = "Product".id
-//             )`),
-//             'averageRating'
-//           ],
-//           [
-//             literal(`(
-//               SELECT json_agg(
-//                 json_build_object(
-//                   'id', c.id,
-//                   'name', c.name
-//                 )
-//               )
-//               FROM categories c
-//               WHERE c.id = ANY("Product".category_ids::uuid[])
-//             )`),
-//             'categories'
-//           ],
-//           [
-//             literal(`(
-//               SELECT json_agg(
-//                 json_build_object(
-//                   'id', ds.id,
-//                   'name', ds.name
-//                 )
-//               )
-//               FROM dress_styles ds
-//               WHERE ds.id = ANY("Product".style_ids::uuid[])
-//             )`),
-//             'styles'
-//           ]
-//         ]
-//       },
-//       raw: false,
-//       nest: true,
+    // First find the category ID based on the name
+    const category = await Category.findOne({
+      where: {
+        name: {
+          [Op.iLike]: categoryName  // Case-insensitive match
+        }
+      },
+      attributes: ['id']
+    });
 
-//       where: {
-//         category_ids: {
-//           [Op.contains]: category_ids,
-//         },
-//       },
-//     });
+    console.log('category:', category);
 
-//     // Handle image URLs
-//     await Promise.all(
-//       products.map(async (product: any) => {
-//         if (product.ProductImgs?.[0]) {
-//           const url = await getFileByFileName(product.ProductImgs[0].file_name);
-//           product.dataValues.ProductImgs[0].dataValues.url = url;
-//         }
-//         return product;
-//       })
-//     );
+    if (!category) {
+      res.status(404).json({ error: "Category not found" });
+    } else {
+      const categoryId = category.id;
 
-//     const result = {
-//       items: products,
-//       total: count,
-//       currentPage: page,
-//       totalPages: Math.ceil(count / limit),
-//       limit
-//     };
+      // Then find all products in this category
+      const { count, rows: products } = await Product.findAndCountAll({
+        include: [
+          {
+            model: ProductImg,
+            separate: true,
+            limit: 1,
+            attributes: ["id", "file_name"],
+            order: [["createdAt", "ASC"]],
+          },
+          {
+            model: Brand,
+            attributes: ["id", "name"],
+          },
+          {
+            model: Sale,
+            separate: true,
+            limit: 1,
+            attributes: ["discount"],
+            where: {
+              start_date: {
+                [Op.lte]: literal("CURRENT_DATE"),
+              },
+              end_date: {
+                [Op.gte]: literal("CURRENT_DATE"),
+              },
+            },
+            required: false,  // Make this a LEFT JOIN so products without sales still appear
+          },
+        ],
+        attributes: {
+          include: [
+            [
+              literal(`(
+              SELECT ROUND(COALESCE(AVG(rating), 0), 2) 
+              FROM reviews 
+              WHERE reviews.product_id = "Product".id
+            )`),
+              'averageRating'
+            ],
+            [
+              literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', c.id,
+                  'name', c.name
+                )
+              )
+              FROM categories c
+              WHERE c.id = ANY("Product".category_ids::uuid[])
+            )`),
+              'categories'
+            ],
+            [
+              literal(`(
+              SELECT json_agg(
+                json_build_object(
+                  'id', ds.id,
+                  'name', ds.name
+                )
+              )
+              FROM dress_styles ds
+              WHERE ds.id = ANY("Product".style_ids::uuid[])
+            )`),
+              'styles'
+            ]
+          ]
+        },
+        where: {
+          category_ids: {
+            [Op.contains]: [categoryId]
+          }
+        },
+        limit,
+        offset,
+        raw: false,
+        nest: true,
+      });
 
-//     res.status(200).json(result);
-//   } catch (error) {
-//     console.error('Error:', error);
-//     if (error instanceof Error) {
-//       res.status(500).json({ error: error.message });
-//     } else {
-//       res.status(500).json({ error: "An unknown error occurred" });
-//     }
-//   }
-// };
+      // Handle image URLs
+      await Promise.all(
+        products.map(async (product: any) => {
+          if (product.ProductImgs?.[0]) {
+            const url = await getFileByFileName(product.ProductImgs[0].file_name);
+            product.dataValues.ProductImgs[0].dataValues.url = url;
+          }
+          return product;
+        })
+      );
 
-// const getProductsByStyles = async (req: Request, res: Response) => {
-//   try {
-//     const { style_ids } = req.body;
-//     let products = await Product.findAll({
-//       include: [
-//         {
-//           model: ProductImg,
-//           separate: true,
-//           limit: 1,
-//           attributes: ["id", "file_name"],
-//           order: [["createdAt", "ASC"]],
-//         },
-//         {
-//           model: Brand,
-//           attributes: ["id", "name"],
-//         },
-//         {
-//           model: Sale,
-//           separate: true,
-//           limit: 1,
-//           attributes: ["discount"],
-//           where: {
-//             start_date: {
-//               [Op.lte]: literal("CURRENT_DATE"),
-//             },
-//             end_date: {
-//               [Op.gte]: literal("CURRENT_DATE"),
-//             },
-//           },
-//         },
-//       ],
-//       attributes: {
-//         include: [
-//           [
-//             literal(`(
-//               SELECT ROUND(COALESCE(AVG(rating), 0), 2) 
-//               FROM reviews 
-//               WHERE reviews.product_id = "Product".id
-//             )`),
-//             'averageRating'
-//           ],
-//           [
-//             literal(`(
-//               SELECT json_agg(
-//                 json_build_object(
-//                   'id', c.id,
-//                   'name', c.name
-//                 )
-//               )
-//               FROM categories c
-//               WHERE c.id = ANY("Product".category_ids::uuid[])
-//             )`),
-//             'categories'
-//           ],
-//           [
-//             literal(`(
-//               SELECT json_agg(
-//                 json_build_object(
-//                   'id', ds.id,
-//                   'name', ds.name
-//                 )
-//               )
-//               FROM dress_styles ds
-//               WHERE ds.id = ANY("Product".style_ids::uuid[])
-//             )`),
-//             'styles'
-//           ]
-//         ]
-//       },
-//       raw: false,
-//       nest: true,
-//       where: {
-//         style_ids: {
-//           [Op.contains]: style_ids,
-//         },
-//       },
-//     });
+      const result = {
+        items: products,
+        total: count,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        limit,
+        categoryName
+      };
 
-//     // Handle image URLs
-//     await Promise.all(
-//       products.map(async (product: any) => {
-//         if (product.ProductImgs?.[0]) {
-//           const url = await getFileByFileName(product.ProductImgs[0].file_name);
-//           product.dataValues.ProductImgs[0].dataValues.url = url;
-//         }
-//         return product;
-//       })
-//     );
-
-//     res.status(200).json(products);
-//   } catch (error) {
-//     console.error('Error:', error);
-//     if (error instanceof Error) {
-//       res.status(500).json({ error: error.message });
-//     } else {
-//       res.status(500).json({ error: "An unknown error occurred" });
-//     }
-//   }
-// };
+      res.status(200).json(result);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
+  }
+};
 
 const getProductsWithFilters = async (req: Request, res: Response) => {
   try {
@@ -874,5 +801,6 @@ export {
   deleteProduct,
   getProductsWithFilters,
   getProductsByBrand,
-  getLatestProducts
+  getLatestProducts,
+  getProductsByCategory
 };
