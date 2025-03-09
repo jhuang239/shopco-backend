@@ -4,8 +4,6 @@ import Product from "../models/product";
 import ProductImg from "../models/product-img";
 import { getFileByFileName } from "../middlewares/firebase";
 import { Op, literal } from "sequelize";
-import Category from "../models/category";
-
 
 const getCartQuantity = async (req: Request, res: Response) => {
   try {
@@ -329,8 +327,7 @@ const clearCart = async (req: Request, res: Response) => {
         user_id,
       },
     });
-    const updatedCart = await getCartFunction(user_id);
-    res.status(200).json(updatedCart);
+    res.status(200).json({ message: "Cart cleared" });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
