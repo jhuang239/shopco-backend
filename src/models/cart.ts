@@ -15,6 +15,8 @@ type CartAttributes = {
   user_id: string;
   product_id: string;
   quantity: number;
+  color: string;
+  size: string;
 };
 
 type CartCreationAttributes = Optional<CartAttributes, "id">;
@@ -70,6 +72,19 @@ export default class Cart extends Model<
     allowNull: false,
   })
   declare quantity: number;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare color: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare size: string;
+
 }
 
 export { CartAttributes };

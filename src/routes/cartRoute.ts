@@ -1,15 +1,48 @@
 import express, { Request, Response } from "express";
 import {
+  getCartQuantity,
   getCart,
   addProductToCart,
   increaseProductQuantity,
   reduceProductQuantity,
-  updateProductQuantity,
+  // updateProductQuantity,
   removeProductFromCart,
   clearCart,
 } from "../controllers/cartController";
 
 export const cartSchema = {
+  "/cart/quantity": {
+    get: {
+      summary: "Retrieve the quantity of items in the cart",
+      tags: ["Cart"],
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      responses: {
+        "200": {
+          description: "The set of item ids in the cart",
+          content: {
+            "application/json": {
+              schema: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                  },
+                }
+              },
+            },
+          },
+        },
+        "500": {
+          description: "An error occurred",
+        },
+      },
+    },
+  },
   "/cart": {
     get: {
       summary: "Retrieve a list of cart items",
@@ -62,8 +95,10 @@ export const cartSchema = {
             schema: {
               type: "object",
               properties: {
-                product_id: { type: "number" },
+                product_id: { type: "string" },
                 quantity: { type: "number" },
+                size: { type: "string" },
+                color: { type: "string" },
               },
             },
           },
@@ -94,7 +129,7 @@ export const cartSchema = {
             schema: {
               type: "object",
               properties: {
-                product_id: { type: "string" },
+                id: { type: "string" },
               },
             },
           },
@@ -125,7 +160,7 @@ export const cartSchema = {
             schema: {
               type: "object",
               properties: {
-                product_id: { type: "string" },
+                id: { type: "string" },
               },
             },
           },
@@ -141,38 +176,38 @@ export const cartSchema = {
       },
     },
   },
-  "/cart/updateProductQuantity": {
-    put: {
-      summary: "Update the quantity of a product in the cart",
-      tags: ["Cart"],
-      security: [
-        {
-          bearerAuth: [],
-        },
-      ],
-      requestBody: {
-        content: {
-          "application/json": {
-            schema: {
-              type: "object",
-              properties: {
-                product_id: { type: "string" },
-                quantity: { type: "number" },
-              },
-            },
-          },
-        },
-      },
-      responses: {
-        "200": {
-          description: "Product quantity updated",
-        },
-        "500": {
-          description: "An error occurred",
-        },
-      },
-    },
-  },
+  // "/cart/updateProductQuantity": {
+  //   put: {
+  //     summary: "Update the quantity of a product in the cart",
+  //     tags: ["Cart"],
+  //     security: [
+  //       {
+  //         bearerAuth: [],
+  //       },
+  //     ],
+  //     requestBody: {
+  //       content: {
+  //         "application/json": {
+  //           schema: {
+  //             type: "object",
+  //             properties: {
+  //               product_id: { type: "string" },
+  //               quantity: { type: "number" },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //     responses: {
+  //       "200": {
+  //         description: "Product quantity updated",
+  //       },
+  //       "500": {
+  //         description: "An error occurred",
+  //       },
+  //     },
+  //   },
+  // },
   "/cart/removeProductFromCart": {
     delete: {
       summary: "Remove a product from the cart",
@@ -188,7 +223,7 @@ export const cartSchema = {
             schema: {
               type: "object",
               properties: {
-                product_id: { type: "string" },
+                id: { type: "string" },
               },
             },
           },
@@ -227,6 +262,8 @@ export const cartSchema = {
 
 const router = express.Router();
 
+router.get("/quantity", getCartQuantity);
+
 router.get("/", getCart);
 
 router.post("/addProductToCart", addProductToCart);
@@ -235,7 +272,7 @@ router.put("/increaseProductQuantity", increaseProductQuantity);
 
 router.put("/reduceProductQuantity", reduceProductQuantity);
 
-router.put("/updateProductQuantity", updateProductQuantity);
+// router.put("/updateProductQuantity", updateProductQuantity);
 
 router.delete("/removeProductFromCart", removeProductFromCart);
 
