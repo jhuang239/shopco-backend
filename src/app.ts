@@ -35,7 +35,7 @@ app.use(cors({
 app.use(express.json()); // <-- This is required to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // <-- This is for parsing URL-encoded bodies
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/user", isAuthenticated, userRoute);
 app.use("/products", productRoute);
 app.use("/auth", authRoute);
