@@ -9,6 +9,7 @@ import Sale from "../models/sale";
 import UserImg from "../models/user-img";
 
 import { QueryInterface, Sequelize } from "sequelize";
+import DressStyle from "../models/dress-style";
 
 const relationshipInit = async (sequelize: Sequelize) => {
   const queryInterface: QueryInterface = sequelize.getQueryInterface();
@@ -16,8 +17,11 @@ const relationshipInit = async (sequelize: Sequelize) => {
     'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'
   );
 
-  Category.hasMany(Product, { foreignKey: "category_id" });
-  Product.belongsTo(Category, { foreignKey: "category_id" });
+  // Product.belongsToMany(Category, { through: 'ProductCategories' });
+  // Product.belongsToMany(DressStyle, { through: 'ProductStyles' });
+
+  // Category.belongsToMany(Product, { through: 'ProductCategories' });
+  // DressStyle.belongsToMany(Product, { through: 'ProductStyles' });
 
   Brand.hasMany(Product, { foreignKey: "brand_id" });
   Product.belongsTo(Brand, { foreignKey: "brand_id" });

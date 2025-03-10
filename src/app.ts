@@ -1,4 +1,5 @@
 require("dotenv").config();
+import { NextFunction, Request, Response } from "express";
 import express, { Express } from "express";
 import sequelize from "./utils/database";
 import cors from "cors";
@@ -9,6 +10,8 @@ import cartRoute from "./routes/cartRoute";
 import authRoute from "./routes/authRoute";
 import adminRoute from "./routes/adminRoute";
 import reviewRoute from "./routes/reviewRoute";
+import reviewPublicRoute from "./routes/reviewPublicRoute";
+import categoryRoute from "./routes/categoryRoute";
 //* swagger
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
@@ -24,17 +27,24 @@ const PORT = process.env.PORT || 3000;
 const swaggerSpec = swaggerJSDoc(config);
 
 // Add these middleware before your routes
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json()); // <-- This is required to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // <-- This is for parsing URL-encoded bodies
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/user", isAuthenticated, userRoute);
-app.use("/product", productRoute);
+app.use("/products", productRoute);
 app.use("/auth", authRoute);
 app.use("/cart", isAuthenticated, cartRoute);
 app.use("/review", isAuthenticated, reviewRoute);
-app.use("/admin", isAdmin, adminRoute);
+app.use("/reviewPublic", reviewPublicRoute);
+app.use("/categories", categoryRoute);
+// app.use("/admin", isAdmin, adminRoute);
+app.use("/admin", adminRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

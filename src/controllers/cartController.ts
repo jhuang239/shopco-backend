@@ -5,36 +5,40 @@ import ProductImg from "../models/product-img";
 import { getFileByFileName } from "../middlewares/firebase";
 import { Op, literal } from "sequelize";
 
+const getCartQuantity = async (req: Request, res: Response) => {
+  try {
+    const user_id = req.body.user.username;
+    const cartItems = await Cart.findAll({
+      where: {
+        user_id
+      },
+      attributes: ['product_id']
+    });
+
+    res.status(200).json(cartItems);
+  }
+  catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
+  }
+}
+
 const addProductToCart = async (req: Request, res: Response) => {
   try {
     const user_id = req.body.user.username;
     console.log(user_id);
-    const { product_id, quantity } = req.body as CartAttributes;
-    const recordExists = await Cart.findOne({
-      where: {
-        user_id,
-        product_id,
-      },
+    const { product_id, quantity, color, size } = req.body as CartAttributes;
+    const cart = await Cart.create({
+      user_id,
+      product_id,
+      quantity,
+      color,
+      size
     });
-    if (recordExists) {
-      const updatedRecord = await Cart.update(
-        { quantity: recordExists.quantity + quantity },
-        {
-          where: {
-            user_id,
-            product_id,
-          },
-        }
-      );
-      res.status(200).json(updatedRecord);
-    } else {
-      const cart = await Cart.create({
-        user_id,
-        product_id,
-        quantity,
-      });
-      res.status(201).json(cart);
-    }
+    res.status(201).json(cart);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -43,6 +47,70 @@ const addProductToCart = async (req: Request, res: Response) => {
     }
   }
 };
+
+const getCartFunction = async (user_id: string) => {
+  const cart = await Cart.findAll({
+    where: {
+      user_id,
+    },
+    include: [
+      {
+        model: Product,
+        attributes: [
+          "name",
+          "price",
+          [
+            literal(`(
+            SELECT json_agg(
+              json_build_object(
+                'id', c.id,
+                'name', c.name
+              )
+            )
+            FROM categories c
+            WHERE c.id = ANY("Product".category_ids::uuid[])
+          )`),
+            'categories'
+          ]
+        ],
+        include: [
+          {
+            model: ProductImg,
+            attributes: ["id", "file_name"],
+            where: {
+              id: {
+                [Op.in]: literal(`(
+                SELECT pi.id
+                FROM product_imgs pi
+                WHERE pi.product_id = "Product"."id"
+                ORDER BY pi."createdAt" DESC
+                limit 1
+              )`),
+              },
+            },
+            required: false,
+          },
+        ],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+  });
+  if (cart.length > 0) {
+    console.log(cart);
+    await Promise.all(
+      cart.map(async (item: any) => {
+        const file_name =
+          item.dataValues.Product.ProductImgs[0].dataValues.file_name;
+        const url = await getFileByFileName(file_name);
+        item.dataValues.Product.ProductImgs[0].dataValues.url = url;
+        return item;
+      })
+    );
+    return cart;
+  } else {
+    return null;
+  }
+}
 
 const getCart = async (req: Request, res: Response) => {
   try {
@@ -54,7 +122,23 @@ const getCart = async (req: Request, res: Response) => {
       include: [
         {
           model: Product,
-          attributes: ["name", "price"],
+          attributes: [
+            "name",
+            "price",
+            [
+              literal(`(
+            SELECT json_agg(
+              json_build_object(
+                'id', c.id,
+                'name', c.name
+              )
+            )
+            FROM categories c
+            WHERE c.id = ANY("Product".category_ids::uuid[])
+          )`),
+              'categories'
+            ]
+          ],
           include: [
             {
               model: ProductImg,
@@ -62,12 +146,12 @@ const getCart = async (req: Request, res: Response) => {
               where: {
                 id: {
                   [Op.in]: literal(`(
-                    SELECT pi.id
-                    FROM product_imgs pi
-                    WHERE pi.product_id = "Product"."id"
-                    ORDER BY pi."createdAt" DESC
-                    limit 1
-                  )`),
+                SELECT pi.id
+                FROM product_imgs pi
+                WHERE pi.product_id = "Product"."id"
+                ORDER BY pi."createdAt" DESC
+                limit 1
+              )`),
                 },
               },
               required: false,
@@ -75,6 +159,7 @@ const getCart = async (req: Request, res: Response) => {
           ],
         },
       ],
+      order: [["createdAt", "DESC"]],
     });
     if (cart.length > 0) {
       console.log(cart);
@@ -89,7 +174,7 @@ const getCart = async (req: Request, res: Response) => {
       );
       res.status(200).json(cart);
     } else {
-      res.status(404).json({ error: "Cart is empty" });
+      res.status(200).json({ message: "Cart is empty" });
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -103,27 +188,29 @@ const getCart = async (req: Request, res: Response) => {
 const increaseProductQuantity = async (req: Request, res: Response) => {
   try {
     const user_id = req.body.user.username;
-    const { product_id } = req.body as CartAttributes;
+    const { id } = req.body as CartAttributes;
+    console.log(user_id, id);
     const cart = await Cart.findOne({
       where: {
         user_id,
-        product_id,
+        id,
       },
     });
     if (!cart) {
       res.status(404).json({ error: "Product not found in cart" });
       return;
     }
-    const updatedRecord = await Cart.update(
+    await Cart.update(
       { quantity: cart.quantity + 1 },
       {
         where: {
           user_id,
-          product_id,
+          id,
         },
       }
     );
-    res.status(200).json(updatedRecord);
+    const updatedCart = await getCartFunction(user_id);
+    res.status(200).json(updatedCart);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -136,11 +223,11 @@ const increaseProductQuantity = async (req: Request, res: Response) => {
 const reduceProductQuantity = async (req: Request, res: Response) => {
   try {
     const user_id = req.body.user.username;
-    const { product_id } = req.body as CartAttributes;
+    const { id } = req.body as CartAttributes;
     const cart = await Cart.findOne({
       where: {
         user_id,
-        product_id,
+        id,
       },
     });
     if (!cart) {
@@ -151,22 +238,23 @@ const reduceProductQuantity = async (req: Request, res: Response) => {
       await Cart.destroy({
         where: {
           user_id,
-          product_id,
+          id,
         },
       });
       res.status(200).json({ message: "Product removed from cart" });
       return;
     }
-    const updatedRecord = await Cart.update(
+    await Cart.update(
       { quantity: cart.quantity - 1 },
       {
         where: {
           user_id,
-          product_id,
+          id,
         },
       }
     );
-    res.status(200).json(updatedRecord);
+    const updatedCart = await getCartFunction(user_id);
+    res.status(200).json(updatedCart);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -190,7 +278,7 @@ const updateProductQuantity = async (req: Request, res: Response) => {
       res.status(404).json({ error: "Product not found in cart" });
       return;
     }
-    const updatedRecord = await Cart.update(
+    await Cart.update(
       { quantity },
       {
         where: {
@@ -199,7 +287,8 @@ const updateProductQuantity = async (req: Request, res: Response) => {
         },
       }
     );
-    res.status(200).json(updatedRecord);
+    const updatedCart = await getCartFunction(user_id);
+    res.status(200).json(updatedCart);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -212,14 +301,15 @@ const updateProductQuantity = async (req: Request, res: Response) => {
 const removeProductFromCart = async (req: Request, res: Response) => {
   try {
     const user_id = req.body.user.username;
-    const { product_id } = req.body as CartAttributes;
-    const cart = await Cart.destroy({
+    const { id } = req.body as CartAttributes;
+    await Cart.destroy({
       where: {
         user_id,
-        product_id,
+        id,
       },
     });
-    res.status(200).json({ message: "Product removed from cart" });
+    const updatedCart = await getCartFunction(user_id);
+    res.status(200).json(updatedCart);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -232,7 +322,7 @@ const removeProductFromCart = async (req: Request, res: Response) => {
 const clearCart = async (req: Request, res: Response) => {
   try {
     const user_id = req.body.user.username;
-    const cart = await Cart.destroy({
+    await Cart.destroy({
       where: {
         user_id,
       },
@@ -248,6 +338,7 @@ const clearCart = async (req: Request, res: Response) => {
 };
 
 export {
+  getCartQuantity,
   addProductToCart,
   getCart,
   increaseProductQuantity,

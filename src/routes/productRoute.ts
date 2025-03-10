@@ -1,9 +1,110 @@
 import express from "express";
-import { getProducts, getProductById } from "../controllers/productController";
+import { getProducts, getProductById, getProductsWithFilters, getLatestProducts, getProductsByCategory } from "../controllers/productController";
 const router = express.Router();
 
 export const productSchema = {
-  "/product/all": {
+  "/products/all": {
+    get: {
+      summary: "Retrieve a list of products",
+      tags: ["Products"],
+      parameters: [
+        {
+          "in": "query",
+          "name": "page",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          },
+          "description": "The page number"
+        }
+      ],
+      responses: {
+        "200": {
+          description: "A list of products",
+          content: {
+            "application/json": {
+              schema: {
+                type: "array",
+                items: {
+                  $ref: "#/components/schemas/Product",
+                },
+              },
+            },
+          },
+        },
+        "500": {
+          description: "An error occurred",
+        },
+      },
+    },
+  },
+  "/products/search": {
+    post: {
+      summary: "Retrieve a list of products",
+      tags: ["Products"],
+      parameters: [
+        {
+          in: "query",
+          name: "page",
+          required: false,
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+          description: "The page number",
+        },
+      ],
+      requestBody: {
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                category_ids: {
+                  type: "array",
+                  items: {
+                    type: "string",
+                  },
+                },
+                style_ids: {
+                  type: "array",
+                  items: {
+                    type: "string",
+                  },
+                },
+                brand_id: {
+                  type: "string",
+                },
+                product_name: {
+                  type: "string",
+                }
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        "200": {
+          description: "A list of products",
+          content: {
+            "application/json": {
+              schema: {
+                type: "array",
+                items: {
+                  $ref: "#/components/schemas/Product",
+                },
+              },
+            },
+          },
+        },
+        "500": {
+          description: "An error occurred",
+        },
+      },
+    },
+  },
+  "/products/latest": {
     get: {
       summary: "Retrieve a list of products",
       tags: ["Products"],
@@ -27,7 +128,52 @@ export const productSchema = {
       },
     },
   },
-  "/product/{id}": {
+  "/products/category": {
+    get: {
+      summary: "Retrieve a list of products",
+      tags: ["Products"],
+      parameters: [
+        {
+          "in": "query",
+          "name": "page",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          },
+          "description": "The page number"
+        },
+        {
+          "in": "query",
+          "name": "categoryName",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The category Name"
+        }
+      ],
+      responses: {
+        "200": {
+          description: "A list of products",
+          content: {
+            "application/json": {
+              schema: {
+                type: "array",
+                items: {
+                  $ref: "#/components/schemas/Product",
+                },
+              },
+            },
+          },
+        },
+        "500": {
+          description: "An error occurred",
+        },
+      },
+    },
+  },
+  "/products/{id}": {
     get: {
       summary: "Get a single product by ID",
       tags: ["Products"],
@@ -63,8 +209,19 @@ export const productSchema = {
     },
   },
 };
-router.get("/all", getProducts);
 
+router.get("/category", getProductsByCategory);
+router.get("/all", getProducts);
+router.post("/search", getProductsWithFilters);
+router.get("/latest", getLatestProducts);
 router.get("/:id", getProductById);
+
+
+
+
+
+// router.get("/dummy/haha", (req, res) => {
+//   res.send("Hello World!");
+// });
 
 export default router;

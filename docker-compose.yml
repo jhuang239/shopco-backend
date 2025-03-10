@@ -8,19 +8,19 @@ services:
     restart: unless-stopped
     networks:
       - shopco-net
-      - traefik-net
+      # - traefik-net
     env_file:
       - .env # Load environment variables from .env file
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.shopco-backend.rule=Host(`shopco-backend.${DOMAIN}`)
-      - traefik.http.services.shopco-backend.loadbalancer.server.port=${PORT}
-      - traefik.http.routers.shopco-backend.tls=true
-      - traefik.http.routers.shopco-backend.entrypoints=websecure
-      - traefik.http.routers.shopco-backend.tls.certresolver=cloudflare
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.routers.shopco-backend.rule=Host(`shopco-backend.${DOMAIN}`)
+    #   - traefik.http.services.shopco-backend.loadbalancer.server.port=${PORT}
+    #   - traefik.http.routers.shopco-backend.tls=true
+    #   - traefik.http.routers.shopco-backend.entrypoints=websecure
+    #   - traefik.http.routers.shopco-backend.tls.certresolver=cloudflare
 
 networks:
   shopco-net:
     external: true
-  traefik-net:
-    external: true
+  # traefik-net:
+  #   external: true

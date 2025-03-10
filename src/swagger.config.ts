@@ -5,6 +5,8 @@ import { adminSchema } from "./routes/adminRoute";
 import { authSchema } from "./routes/authRoute";
 import { reviewSchema } from "./routes/reviewRoute";
 import { cartSchema } from "./routes/cartRoute";
+import { reviewPublicSchema } from "./routes/reviewPublicRoute";
+import { categorySchema } from "./routes/categoryRoute";
 
 const routeSchemas = {
   ...updateUserSchema,
@@ -12,7 +14,9 @@ const routeSchemas = {
   ...adminSchema,
   ...authSchema,
   ...reviewSchema,
+  ...reviewPublicSchema,
   ...cartSchema,
+  ...categorySchema,
   "/": {
     get: {
       tags: ["Home"],
@@ -184,9 +188,10 @@ const swaggerOptions = {
             "description",
             "price",
             "stock",
-            "category_id",
+            "category_ids",
             "brand_id",
             "images",
+            "style_ids",
           ],
           properties: {
             name: {
@@ -210,10 +215,13 @@ const swaggerOptions = {
               description: "The stock of the product",
               example: 50,
             },
-            category_id: {
-              type: "string",
-              description: "The id of the category",
-              example: "90de8b53-aadd-4983-9740-9a821898b9e8",
+            category_ids: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "The id of the categories",
+              example: ["90de8b53-aadd-4983-9740-9a821898b9e8"],
             },
             brand_id: {
               type: "string",
@@ -228,6 +236,29 @@ const swaggerOptions = {
               },
               description: "The images of the product",
             },
+            style_ids: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "The id of the styles",
+              example: ["90de8b53-aadd-4983-9740-9a821898b9e8"],
+            },
+          },
+        },
+        Style: {
+          type: "object",
+          required: ["name"],
+          properties: {
+            id: {
+              type: "string",
+            },
+            name: {
+              type: "string",
+            },
+          },
+          example: {
+            name: "Casual",
           },
         },
         Brand: {
@@ -315,7 +346,7 @@ const swaggerOptions = {
         },
         Review: {
           type: "object",
-          required: ["comment", "rating", "user_id", "product_id"],
+          required: ["comment", "rating", "product_id"],
           properties: {
             comment: {
               type: "string",
@@ -324,10 +355,6 @@ const swaggerOptions = {
             rating: {
               type: "number",
               example: 5, // 1-5
-            },
-            user_id: {
-              type: "string",
-              example: "a618454f-3838-4527-88d6-8ea4eb897cf0",
             },
             product_id: {
               type: "string",

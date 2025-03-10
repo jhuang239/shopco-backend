@@ -1,9 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import bcrypt from "bcrypt";
 
-const JWT_SECRET = process.env.JWT_SECRET_KEY;
-const JWT_EXPIRATION = process.env.JWT_EXPIRATION;
+const JWT_SECRET = process.env.JWT_SECRET_KEY as string;
+const JWT_EXPIRATION = process.env.JWT_EXPIRATION || "1h";
 
 type jwtPayload = {
   username: string;
@@ -27,10 +27,8 @@ const comparePassword = async (
   return await bcrypt.compare(plainPassword, hashedPassword);
 };
 
-const generateToken = (user: jwtPayload) => {
-  return jwt.sign(user, JWT_SECRET, {
-    expiresIn: JWT_EXPIRATION,
-  });
+const generateToken = (user: jwtPayload): string => {
+  return jwt.sign(user, JWT_SECRET, { expiresIn: JWT_EXPIRATION } as SignOptions);
 };
 
 const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
