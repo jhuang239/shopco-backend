@@ -43,8 +43,7 @@ app.use("/cart", isAuthenticated, cartRoute);
 app.use("/review", isAuthenticated, reviewRoute);
 app.use("/reviewPublic", reviewPublicRoute);
 app.use("/categories", categoryRoute);
-// app.use("/admin", isAdmin, adminRoute);
-app.use("/admin", adminRoute);
+app.use("/admin", isAdmin, adminRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
