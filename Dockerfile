@@ -1,34 +1,31 @@
-# Build stage
-FROM node:18-alpine AS builder
-WORKDIR /usr/src/app
+FROM node:18-alpine as builder
 
-# Copy package files first (better layer caching)
-COPY package*.json ./
-RUN npm ci  # Use ci instead of install for more reliable builds
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json* tsconfig.json ./
+RUN npm ci
 
 # Copy source code
-COPY . .
+COPY src/ ./src/
 
-# Build the application
+# Build TypeScript code
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
-WORKDIR /usr/src/app
+FROM node:18-alpine
 
-# Copy only production dependencies
-COPY package*.json ./
+WORKDIR /app
+
+# Copy package files and install only production dependencies
+COPY package.json package-lock.json* ./
 RUN npm ci --only=production
 
-# Copy built files from builder
-COPY --from=builder /usr/src/app/dist ./dist
+# Copy compiled code from builder stage
+COPY --from=builder /app/dist ./dist
 
-# Add healthcheck (optional but recommended)
-HEALTHCHECK --interval=30s --timeout=3s \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
-
-# Use non-root user for security
-USER node
-
+# Expose the port your app runs on
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+
+# Command to run the application
+CMD ["node", "dist/app.js"]
