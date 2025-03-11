@@ -4,6 +4,7 @@ import {
   comparePassword,
   generateToken,
 } from "../middlewares/authentication";
+
 import User, { UserAttributes } from "../models/user";
 
 const registerUser = async (req: Request, res: Response) => {
