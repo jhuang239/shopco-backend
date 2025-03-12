@@ -12,6 +12,7 @@ import adminRoute from "./routes/adminRoute";
 import reviewRoute from "./routes/reviewRoute";
 import reviewPublicRoute from "./routes/reviewPublicRoute";
 import categoryRoute from "./routes/categoryRoute";
+import brandRoute from "./routes/brandRoute";
 //* swagger
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
@@ -35,7 +36,7 @@ app.use(cors({
 app.use(express.json()); // <-- This is required to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // <-- This is for parsing URL-encoded bodies
 
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/user", isAuthenticated, userRoute);
 app.use("/products", productRoute);
 app.use("/auth", authRoute);
@@ -44,6 +45,7 @@ app.use("/review", isAuthenticated, reviewRoute);
 app.use("/reviewPublic", reviewPublicRoute);
 app.use("/categories", categoryRoute);
 app.use("/admin", isAdmin, adminRoute);
+app.use("/brands", brandRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

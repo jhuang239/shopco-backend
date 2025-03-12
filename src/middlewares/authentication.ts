@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const JWT_SECRET = process.env.JWT_SECRET_KEY as string;
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || "1h";
