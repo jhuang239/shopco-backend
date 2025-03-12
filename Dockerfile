@@ -2,24 +2,30 @@ FROM node:18-alpine as builder
 
 WORKDIR /app
 
+# Install pnpm globally
+RUN npm install -g pnpm
+
 # Copy package files and install dependencies
-COPY package.json package-lock.json* tsconfig.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml* tsconfig.json ./
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY src/ ./src/
 
 # Build TypeScript code
-RUN npm run build
+RUN pnpm run build
 
 # Production stage
 FROM node:18-alpine
 
 WORKDIR /app
 
+# Install pnpm globally in production image
+RUN npm install -g pnpm
+
 # Copy package files and install only production dependencies
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile --prod
 
 # Copy compiled code from builder stage
 COPY --from=builder /app/dist ./dist
