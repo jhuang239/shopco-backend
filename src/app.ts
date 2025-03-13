@@ -28,11 +28,13 @@ const PORT = process.env.PORT || 3000;
 const swaggerSpec = swaggerJSDoc(config);
 
 // Add these middleware before your routes
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+    cors({
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
 app.use(express.json()); // <-- This is required to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // <-- This is for parsing URL-encoded bodies
 
@@ -48,14 +50,14 @@ app.use("/admin", isAdmin, adminRoute);
 app.use("/brands", brandRoute);
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+    res.send("Hello World 123!");
 });
 
 sequelize.sync().then(() => {
-  console.log("Database connected");
-  relationshipInit(sequelize);
+    console.log("Database connected");
+    relationshipInit(sequelize);
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
