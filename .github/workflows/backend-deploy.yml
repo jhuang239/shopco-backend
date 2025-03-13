@@ -74,8 +74,8 @@ jobs:
               id: deploy-backend
               run: |
                   ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST }} "cd ~/Github_Projects/shopco-backend && \
-                  docker-compose down && \
-                  docker-compose up -d --build"
+                  docker compose down && \
+                  docker compose up -d --build"
 
             - name: Clean up SSH keys
               if: always()
