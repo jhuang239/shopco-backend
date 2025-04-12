@@ -13,6 +13,7 @@ import reviewRoute from "./routes/reviewRoute";
 import reviewPublicRoute from "./routes/reviewPublicRoute";
 import categoryRoute from "./routes/categoryRoute";
 import brandRoute from "./routes/brandRoute";
+import styleRoute from "./routes/styleRoute";
 //* swagger
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
@@ -48,6 +49,7 @@ app.use("/reviewPublic", reviewPublicRoute);
 app.use("/categories", categoryRoute);
 app.use("/admin", isAdmin, adminRoute);
 app.use("/brands", brandRoute);
+app.use("/styles", styleRoute);
 
 app.get("/", (req, res) => {
     res.send("Hello World 123!");
